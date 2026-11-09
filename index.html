@@ -1,0 +1,2643 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>초록숲 나무 & 약초 타자연습</title>
+    <meta name="description" content="나무와 약초 이름으로 즐기는 7단계 한글 타자연습 게임. 2배 큰 글씨, 60초 라운드, 10초 단어 타이머, 무오타 보너스와 약초 가산점, 참잘했어요 칭찬 스탬프 제공." />
+    <meta property="og:title" content="초록숲 나무 & 약초 타자연습" />
+    <meta property="og:description" content="나무와 약초 이름으로 즐기는 7단계 한글 타자연습 게임. 2배 큰 글씨, 60초 라운드, 10초 단어 타이머, 무오타 보너스와 약초 가산점, 참잘했어요 칭찬 스탬프 제공." />
+    <meta property="og:type" content="website" />
+    
+    <!-- Pretendard Web Font -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    
+    <!-- Tailwind CSS (Play CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'scale(0.98)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
+              }
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.25s ease-out forwards',
+            }
+          }
+        }
+      };
+    </script>
+
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+
+    <!-- React 18 & ReactDOM 18 (UMD for file:// and GitHub Pages compatibility) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel Standalone (runs JSX in browser without build tools) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(6, 78, 59, 0.4);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(16, 185, 129, 0.5);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(16, 185, 129, 0.8);
+      }
+    </style>
+  </head>
+  <body class="font-sans antialiased bg-emerald-950 text-slate-100 selection:bg-emerald-500 selection:text-white min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef, useCallback } = React;
+
+      // =========================================================================
+      // 1. INLINE SVG ICONS (Feather/Lucide style, zero external icon dependency)
+      // =========================================================================
+      const Icon = ({ name, className = "w-5 h-5", strokeWidth = 2, ...props }) => {
+        const svgProps = {
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 24 24",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          className,
+          ...props
+        };
+
+        switch (name) {
+          case 'trees':
+            return (
+              <svg {...svgProps}>
+                <path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z" />
+                <path d="M7 16v6" />
+                <path d="M13 19v3" />
+                <path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-4 4.3a1 1 0 0 0 .8 1.7H10l-3 3.3a1 1 0 0 0 .7 1.7H8l-3 3.3a1 1 0 0 0 .7 1.7H12" />
+              </svg>
+            );
+          case 'sparkles':
+            return (
+              <svg {...svgProps}>
+                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
+              </svg>
+            );
+          case 'trophy':
+            return (
+              <svg {...svgProps}>
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                <path d="M4 22h16" />
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+              </svg>
+            );
+          case 'book-open':
+            return (
+              <svg {...svgProps}>
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+            );
+          case 'rotate-ccw':
+            return (
+              <svg {...svgProps}>
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+            );
+          case 'play':
+            return (
+              <svg {...svgProps}>
+                <polygon points="6 3 20 12 6 21 6 3" />
+              </svg>
+            );
+          case 'pause':
+            return (
+              <svg {...svgProps}>
+                <rect x="14" y="4" width="4" height="16" rx="1" />
+                <rect x="6" y="4" width="4" height="16" rx="1" />
+              </svg>
+            );
+          case 'volume-2':
+            return (
+              <svg {...svgProps}>
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+              </svg>
+            );
+          case 'volume-x':
+            return (
+              <svg {...svgProps}>
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <line x1="22" x2="16" y1="9" y2="15" />
+                <line x1="16" x2="22" y1="9" y2="15" />
+              </svg>
+            );
+          case 'music':
+            return (
+              <svg {...svgProps}>
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+              </svg>
+            );
+          case 'award':
+            return (
+              <svg {...svgProps}>
+                <circle cx="12" cy="8" r="6" />
+                <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526" />
+              </svg>
+            );
+          case 'zap':
+            return (
+              <svg {...svgProps}>
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            );
+          case 'target':
+            return (
+              <svg {...svgProps}>
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="6" />
+                <circle cx="12" cy="12" r="2" />
+              </svg>
+            );
+          case 'clock':
+            return (
+              <svg {...svgProps}>
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            );
+          case 'timer':
+            return (
+              <svg {...svgProps}>
+                <line x1="10" x2="14" y1="2" y2="2" />
+                <line x1="12" x2="15" y1="14" y2="11" />
+                <circle cx="12" cy="14" r="8" />
+              </svg>
+            );
+          case 'check':
+            return (
+              <svg {...svgProps}>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            );
+          case 'check-circle-2':
+            return (
+              <svg {...svgProps}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            );
+          case 'alert-circle':
+            return (
+              <svg {...svgProps}>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" x2="12" y1="8" y2="12" />
+                <line x1="12" x2="12.01" y1="16" y2="16" />
+              </svg>
+            );
+          case 'alert-triangle':
+            return (
+              <svg {...svgProps}>
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <line x1="12" x2="12" y1="9" y2="13" />
+                <line x1="12" x2="12.01" y1="17" y2="17" />
+              </svg>
+            );
+          case 'bookmark-check':
+            return (
+              <svg {...svgProps}>
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z" />
+                <path d="m9 10 2 2 4-4" />
+              </svg>
+            );
+          case 'trash-2':
+            return (
+              <svg {...svgProps}>
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                <line x1="10" x2="10" y1="11" y2="17" />
+                <line x1="14" x2="14" y1="11" y2="17" />
+              </svg>
+            );
+          case 'x':
+            return (
+              <svg {...svgProps}>
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            );
+          case 'arrow-right':
+            return (
+              <svg {...svgProps}>
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            );
+          case 'calendar':
+            return (
+              <svg {...svgProps}>
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                <line x1="16" x2="16" y1="2" y2="6" />
+                <line x1="8" x2="8" y1="2" y2="6" />
+                <line x1="3" x2="21" y1="10" y2="10" />
+              </svg>
+            );
+          default:
+            return null;
+        }
+      };
+
+      // =========================================================================
+      // 2. 100 NATURE WORDS DATABASE (65 Trees + 35 Medicinal Herbs)
+      // =========================================================================
+      const POOL_100_NATURE_WORDS = [
+        // 1 ~ 65: 나무 (Trees - Base 10 pts)
+        { id: 'w-001', word: '소나무', category: 'tree', categoryLabel: '나무', meaning: '사계절 푸르른 상록수로 굳은 절개와 장수를 상징합니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-002', word: '참나무', category: 'tree', categoryLabel: '나무', meaning: '다람쥐가 좋아하는 도토리가 열리는 우리 숲의 든든한 나무입니다.', bonusPoints: 0, badge: '🌳' },
+        { id: 'w-003', word: '은행나무', category: 'tree', categoryLabel: '나무', meaning: '가을이면 눈부신 황금빛 잎을 뽐내는 수억 년 역사의 화석나무입니다.', bonusPoints: 0, badge: '🍂' },
+        { id: 'w-004', word: '자작나무', category: 'tree', categoryLabel: '나무', meaning: '눈처럼 하얀 껍질이 신비로운 북녘 숲의 귀족나무입니다.', bonusPoints: 0, badge: '🪵' },
+        { id: 'w-005', word: '단풍나무', category: 'tree', categoryLabel: '나무', meaning: '가을 산과 들을 붉고 곱게 물들이는 한국의 대표 활엽수입니다.', bonusPoints: 0, badge: '🍁' },
+        { id: 'w-006', word: '편백나무', category: 'tree', categoryLabel: '나무', meaning: '피톤치드가 뿜어나와 스트레스를 풀어주는 힐링 숲의 나무입니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-007', word: '느티나무', category: 'tree', categoryLabel: '나무', meaning: '마을 어귀에서 시원한 그늘과 쉼터를 내어주는 정자나무입니다.', bonusPoints: 0, badge: '🌳' },
+        { id: 'w-008', word: '동백나무', category: 'tree', categoryLabel: '나무', meaning: '추운 겨울 눈 속에서도 붉은 꽃망울을 활짝 피우는 나무입니다.', bonusPoints: 0, badge: '🌺' },
+        { id: 'w-009', word: '벚나무', category: 'tree', categoryLabel: '나무', meaning: '봄바람에 흩날리는 연분홍 꽃비로 온 세상을 축제로 만듭니다.', bonusPoints: 0, badge: '🌸' },
+        { id: 'w-010', word: '밤나무', category: 'tree', categoryLabel: '나무', meaning: '가시 박힌 밤송이 속에 달콤하고 든든한 알밤을 맺는 나무입니다.', bonusPoints: 0, badge: '🌰' },
+        { id: 'w-011', word: '주목', category: 'tree', categoryLabel: '나무', meaning: '살아서 천 년, 죽어서 천 년을 간다는 단단하고 고귀한 나무입니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-012', word: '배롱나무', category: 'tree', categoryLabel: '나무', meaning: '백일 동안 분홍빛 꽃이 피어 백일홍나무라고도 불립니다.', bonusPoints: 0, badge: '💮' },
+        { id: 'w-013', word: '전나무', category: 'tree', categoryLabel: '나무', meaning: '하늘을 향해 곧게 치솟는 푸르고 늠름한 침엽수입니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-014', word: '잣나무', category: 'tree', categoryLabel: '나무', meaning: '한국 고유의 특산목으로 고소하고 영양 가득한 잣을 선물합니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-015', word: '버드나무', category: 'tree', categoryLabel: '나무', meaning: '냇가에서 실바람에 긴 가지를 하늘거리며 물을 맑게 걸러줍니다.', bonusPoints: 0, badge: '🍃' },
+        { id: 'w-016', word: '계수나무', category: 'tree', categoryLabel: '나무', meaning: '가을 낙엽에서 달콤한 캐러멜과 솜사탕 향기를 풍기는 나무입니다.', bonusPoints: 0, badge: '🍂' },
+        { id: 'w-017', word: '회화나무', category: 'tree', categoryLabel: '나무', meaning: '옛 선비들이 학문을 닦으며 마당에 심던 고결한 학자수입니다.', bonusPoints: 0, badge: '🌳' },
+        { id: 'w-018', word: '이팝나무', category: 'tree', categoryLabel: '나무', meaning: '초여름 흰 쌀밥을 소복이 얹어놓은 듯 꽃이 만발하는 나무입니다.', bonusPoints: 0, badge: '🍚' },
+        { id: 'w-019', word: '호두나무', category: 'tree', categoryLabel: '나무', meaning: '두뇌 건강에 좋은 오메가 지방산이 풍부한 호두 열매를 맺습니다.', bonusPoints: 0, badge: '🌰' },
+        { id: 'w-020', word: '대나무', category: 'tree', categoryLabel: '나무', meaning: '속은 비었으나 곧고 단단하여 사군자의 맑은 지조를 상징합니다.', bonusPoints: 0, badge: '🎋' },
+        { id: 'w-021', word: '물푸레나무', category: 'tree', categoryLabel: '나무', meaning: '가지를 물에 담그면 푸른 빛이 우러난다는 단단하고 질긴 나무입니다.', bonusPoints: 0, badge: '💧' },
+        { id: 'w-022', word: '목련나무', category: 'tree', categoryLabel: '나무', meaning: '이른 봄 새하얀 등불을 켜듯 환하고 순수한 꽃잎을 피웁니다.', bonusPoints: 0, badge: '🤍' },
+        { id: 'w-023', word: '가문비나무', category: 'tree', categoryLabel: '나무', meaning: '크리스마스 트리로 사랑받는 곧고 기품 있는 침엽수입니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-024', word: '사시나무', category: 'tree', categoryLabel: '나무', meaning: '미풍에도 잎사귀가 살랑살랑 소리를 내며 흔들리는 나무입니다.', bonusPoints: 0, badge: '🍃' },
+        { id: 'w-025', word: '조팝나무', category: 'tree', categoryLabel: '나무', meaning: '봄날 튀겨놓은 좁쌀 팝콘처럼 하얗고 소담스러운 꽃을 피웁니다.', bonusPoints: 0, badge: '🍿' },
+        { id: 'w-026', word: '팽나무', category: 'tree', categoryLabel: '나무', meaning: '마을 어귀에서 수백 년 세월을 든든하게 지켜주는 보호수입니다.', bonusPoints: 0, badge: '🌳' },
+        { id: 'w-027', word: '감나무', category: 'tree', categoryLabel: '나무', meaning: '가을이면 주황빛 달콤한 감이 탐스럽게 익어가는 유실수입니다.', bonusPoints: 0, badge: '🍊' },
+        { id: 'w-028', word: '닥나무', category: 'tree', categoryLabel: '나무', meaning: '질긴 나무껍질로 천 년을 가는 한지를 만드는 고마운 나무입니다.', bonusPoints: 0, badge: '📜' },
+        { id: 'w-029', word: '마가목', category: 'tree', categoryLabel: '나무', meaning: '말의 어금니처럼 돋아나는 싹과 붉은 열매가 관절에 좋습니다.', bonusPoints: 0, badge: '🍒' },
+        { id: 'w-030', word: '옻나무', category: 'tree', categoryLabel: '나무', meaning: '천연 방부 칠감인 옻칠과 옻닭 요리에 쓰이는 약용목입니다.', bonusPoints: 0, badge: '🪵' },
+        { id: 'w-031', word: '박달나무', category: 'tree', categoryLabel: '나무', meaning: '도끼날도 무뎌질 만큼 매우 단단하고 야무진 한국의 명목입니다.', bonusPoints: 0, badge: '🪵' },
+        { id: 'w-032', word: '산사나무', category: 'tree', categoryLabel: '나무', meaning: '작고 붉은 아가위 열매가 열려 소화를 촉진해 주는 나무입니다.', bonusPoints: 0, badge: '🍎' },
+        { id: 'w-033', word: '때죽나무', category: 'tree', categoryLabel: '나무', meaning: '초여름 종 모양의 은백색 꽃이 무수히 매달려 피는 나무입니다.', bonusPoints: 0, badge: '🔔' },
+        { id: 'w-034', word: '사철나무', category: 'tree', categoryLabel: '나무', meaning: '사계절 내내 푸른 잎으로 울타리를 만들어주는 상록활엽수입니다.', bonusPoints: 0, badge: '🌿' },
+        { id: 'w-035', word: '구상나무', category: 'tree', categoryLabel: '나무', meaning: '한국 지리산·한라산 특산종으로 세계 최고의 크리스마스트리입니다.', bonusPoints: 0, badge: '🎄' },
+        { id: 'w-036', word: '분비나무', category: 'tree', categoryLabel: '나무', meaning: '높은 산 능선에서 추위를 견디며 꿋꿋이 자라는 상록침엽수입니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-037', word: '노각나무', category: 'tree', categoryLabel: '나무', meaning: '비단처럼 매끄럽고 얼룩덜룩한 수피가 아름다운 한국 특산목입니다.', bonusPoints: 0, badge: '🪵' },
+        { id: 'w-038', word: '향나무', category: 'tree', categoryLabel: '나무', meaning: '심재에서 은은하고 맑은 향이 우러나 제사 향으로 쓰이는 나무입니다.', bonusPoints: 0, badge: '🪵' },
+        { id: 'w-039', word: '굴참나무', category: 'tree', categoryLabel: '나무', meaning: '두꺼운 코르크 껍질로 굴피집 지붕을 얹던 토속적인 참나무입니다.', bonusPoints: 0, badge: '🌳' },
+        { id: 'w-040', word: '상수리나무', category: 'tree', categoryLabel: '나무', meaning: '임금님 수라상에 올리던 도토리묵을 만드는 으뜸 도토리나무입니다.', bonusPoints: 0, badge: '🌰' },
+        { id: 'w-041', word: '신갈나무', category: 'tree', categoryLabel: '나무', meaning: '짚신 바닥에 깔아 땀을 흡수하던 잎이 크고 시원한 참나무입니다.', bonusPoints: 0, badge: '🍃' },
+        { id: 'w-042', word: '떡갈나무', category: 'tree', categoryLabel: '나무', meaning: '잎이 두텁고 넓어 떡을 싸서 찌던 은은한 향기의 참나무입니다.', bonusPoints: 0, badge: '🍂' },
+        { id: 'w-043', word: '졸참나무', category: 'tree', categoryLabel: '나무', meaning: '참나무 중 잎과 도토리가 작지만 묵 맛은 가장 으뜸입니다.', bonusPoints: 0, badge: '🐿️' },
+        { id: 'w-044', word: '갈참나무', category: 'tree', categoryLabel: '나무', meaning: '가을 늦게까지 단풍 잎을 달고 숲을 덮어주는 참나무입니다.', bonusPoints: 0, badge: '🍁' },
+        { id: 'w-045', word: '측백나무', category: 'tree', categoryLabel: '나무', meaning: '잎이 옆으로 납작하게 서서 자라는 정취 깊은 사철푸른나무입니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-046', word: '화살나무', category: 'tree', categoryLabel: '나무', meaning: '줄기에 화살 깃 같은 코르크 날개가 달린 혈액순환 약용목입니다.', bonusPoints: 0, badge: '🏹' },
+        { id: 'w-047', word: '층층나무', category: 'tree', categoryLabel: '나무', meaning: '가지가 사방으로 층을 이루며 수평으로 반듯하게 뻗는 나무입니다.', bonusPoints: 0, badge: '🌳' },
+        { id: 'w-048', word: '보리수나무', category: 'tree', categoryLabel: '나무', meaning: '루비처럼 영롱한 보리수 열매로 기침과 천식을 달래줍니다.', bonusPoints: 0, badge: '🍒' },
+        { id: 'w-049', word: '자귀나무', category: 'tree', categoryLabel: '나무', meaning: '밤이면 잎이 서로 포개져 금슬 좋은 부부화목을 상징하는 나무입니다.', bonusPoints: 0, badge: '🌸' },
+        { id: 'w-050', word: '귀룽나무', category: 'tree', categoryLabel: '나무', meaning: '봄철 새하얀 구름 꽃송이를 매달아 향기를 퍼뜨리는 꽃나무입니다.', bonusPoints: 0, badge: '☁️' },
+        { id: 'w-051', word: '헛개나무', category: 'tree', categoryLabel: '나무', meaning: '간을 해독하고 숙취를 시원하게 풀어주는 한국의 명목입니다.', bonusPoints: 0, badge: '🍶' },
+        { id: 'w-052', word: '고로쇠나무', category: 'tree', categoryLabel: '나무', meaning: '뼈에 이롭다는 골리수에서 유래한 맑고 달콤한 수액을 냅니다.', bonusPoints: 0, badge: '💧' },
+        { id: 'w-053', word: '비자나무', category: 'tree', categoryLabel: '나무', meaning: '제주 비자림처럼 수백 년 동안 그윽한 피톤치드를 뿜는 늘푸른나무입니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-054', word: '녹나무', category: 'tree', categoryLabel: '나무', meaning: '장뇌 향기를 품어 벌레를 쫓고 장수하는 제주도의 대표 거목입니다.', bonusPoints: 0, badge: '🌳' },
+        { id: 'w-055', word: '후박나무', category: 'tree', categoryLabel: '나무', meaning: '두꺼운 껍질로 위장을 편안하게 돕는 남쪽 바닷가의 상록교목입니다.', bonusPoints: 0, badge: '🪵' },
+        { id: 'w-056', word: '솔송나무', category: 'tree', categoryLabel: '나무', meaning: '울릉도의 거친 바닷바람을 이겨내며 기품 있게 자라는 침엽수입니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-057', word: '참식나무', category: 'tree', categoryLabel: '나무', meaning: '황금빛 융모가 어린 잎을 감싸 신비로운 제주 상록수입니다.', bonusPoints: 0, badge: '✨' },
+        { id: 'w-058', word: '담팔수', category: 'tree', categoryLabel: '나무', meaning: '여덟 장 중 한 장이 늘 붉게 물들어 떨어지는 이색적인 남부수종입니다.', bonusPoints: 0, badge: '🍁' },
+        { id: 'w-059', word: '먼나무', category: 'tree', categoryLabel: '나무', meaning: '겨울철 새빨간 열매를 보석처럼 주렁주렁 매다는 가로수입니다.', bonusPoints: 0, badge: '🍒' },
+        { id: 'w-060', word: '호랑가시나무', category: 'tree', categoryLabel: '나무', meaning: '호랑이 발톱처럼 가시 돋친 잎과 붉은 열매가 겨울을 수놓습니다.', bonusPoints: 0, badge: '🐅' },
+        { id: 'w-061', word: '꽝꽝나무', category: 'tree', categoryLabel: '나무', meaning: '잎이 탈 때 꽝꽝 소리가 난다는 재미있는 이름의 상록관목입니다.', bonusPoints: 0, badge: '💥' },
+        { id: 'w-062', word: '굴거리나무', category: 'tree', categoryLabel: '나무', meaning: '붉은 잎자루가 청초하여 굿거리장단처럼 신명 나는 나무입니다.', bonusPoints: 0, badge: '🌿' },
+        { id: 'w-063', word: '금강소나무', category: 'tree', categoryLabel: '나무', meaning: '궁궐 건축에 쓰이는 붉고 곧게 뻗은 한국 최상급 명품 소나무입니다.', bonusPoints: 0, badge: '🌲' },
+        { id: 'w-064', word: '왕벚나무', category: 'tree', categoryLabel: '나무', meaning: '제주 한라산 자생지로 화사한 꽃구름을 선물하는 한국 특산목입니다.', bonusPoints: 0, badge: '🌸' },
+        { id: 'w-065', word: '비목나무', category: 'tree', categoryLabel: '나무', meaning: '잎과 가지에서 산뜻한 레몬 향기가 물씬 풍겨나는 숲의 향기목입니다.', bonusPoints: 0, badge: '🍋' },
+
+        // 66 ~ 100: 약초 (Medicinal Herbs - Base 10 pts + 10 pts Herb Bonus = 20 pts!)
+        { id: 'w-066', word: '도라지', category: 'herb', categoryLabel: '약초', meaning: '사포닌이 풍부하여 목과 기관지를 보호해 주는 고마운 약초입니다.', bonusPoints: 10, badge: '🌿' },
+        { id: 'w-067', word: '감초', category: 'herb', categoryLabel: '약초', meaning: '약방의 감초처럼 쓴 한약을 달콤하게 조화시켜 주는 귀한 약초입니다.', bonusPoints: 10, badge: '✨' },
+        { id: 'w-068', word: '인삼', category: 'herb', categoryLabel: '약초', meaning: '원기를 보하고 면역력을 높여주는 한국의 대표 건강 약초입니다.', bonusPoints: 10, badge: '🪴' },
+        { id: 'w-069', word: '황기', category: 'herb', categoryLabel: '약초', meaning: '땀을 조절하고 몸의 기운을 북돋아 삼계탕에 애용되는 명약초입니다.', bonusPoints: 10, badge: '🌾' },
+        { id: 'w-070', word: '둥굴레', category: 'herb', categoryLabel: '약초', meaning: '구수한 차로 끓여 마시면 피로를 덜어주고 피부를 맑게 해줍니다.', bonusPoints: 10, badge: '🌱' },
+        { id: 'w-071', word: '당귀', category: 'herb', categoryLabel: '약초', meaning: '혈액순환을 돕고 몸을 따스하게 감싸주는 대표 보혈 약초입니다.', bonusPoints: 10, badge: '🌿' },
+        { id: 'w-072', word: '오미자', category: 'herb', categoryLabel: '약초', meaning: '단맛, 짠맛, 매운맛, 쓴맛, 신맛의 다섯 가지 오묘한 맛을 지녔습니다.', bonusPoints: 10, badge: '🍇' },
+        { id: 'w-073', word: '천궁', category: 'herb', categoryLabel: '약초', meaning: '특유의 짙은 향기로 두통을 달래고 혈액을 순환시켜 줍니다.', bonusPoints: 10, badge: '🌿' },
+        { id: 'w-074', word: '구기자', category: 'herb', categoryLabel: '약초', meaning: '붉은 보석처럼 빛나며 눈을 맑게 하고 노화를 방지해 줍니다.', bonusPoints: 10, badge: '🍒' },
+        { id: 'w-075', word: '산삼', category: 'herb', categoryLabel: '약초', meaning: '깊은 산 속에서 자연의 이슬을 머금고 자란 전설의 영약초입니다.', bonusPoints: 10, badge: '👑' },
+        { id: 'w-076', word: '작약', category: 'herb', categoryLabel: '약초', meaning: '화려한 꽃과 함께 뿌리는 뭉친 근육통을 풀어주는 효능이 있습니다.', bonusPoints: 10, badge: '🌺' },
+        { id: 'w-077', word: '하수오', category: 'herb', categoryLabel: '약초', meaning: '흰 머리를 검게 물들일 정도로 기력을 되돌려주는 신비의 약초입니다.', bonusPoints: 10, badge: '✨' },
+        { id: 'w-078', word: '복분자', category: 'herb', categoryLabel: '약초', meaning: '요강을 뒤엎을 만큼 왕성한 양기를 북돋아 준다는 검붉은 산딸기입니다.', bonusPoints: 10, badge: '🫐' },
+        { id: 'w-079', word: '산수유', category: 'herb', categoryLabel: '약초', meaning: '이른 봄 노란 꽃을 피우고 가을에는 붉은 열매로 원기를 돕습니다.', bonusPoints: 10, badge: '🟡' },
+        { id: 'w-080', word: '익모초', category: 'herb', categoryLabel: '약초', meaning: '어머니에게 이로운 약초로 쓴맛이 나며 혈액순환에 좋습니다.', bonusPoints: 10, badge: '🌿' },
+        { id: 'w-081', word: '결명자', category: 'herb', categoryLabel: '약초', meaning: '눈을 밝게 트이게 해준다는 뜻을 가진 구수한 건강 씨앗입니다.', bonusPoints: 10, badge: '👁️' },
+        { id: 'w-082', word: '지황', category: 'herb', categoryLabel: '약초', meaning: '경옥고의 핵심 원료로 진액을 보충해 주는 검붉은 약초입니다.', bonusPoints: 10, badge: '🍂' },
+        { id: 'w-083', word: '갈근', category: 'herb', categoryLabel: '약초', meaning: '칡의 뿌리로 열을 내리고 갈증을 멎게 하는 시원한 약초입니다.', bonusPoints: 10, badge: '🪵' },
+        { id: 'w-084', word: '우슬', category: 'herb', categoryLabel: '약초', meaning: '소의 무릎을 닮아 쇠무릎이라 불리며 무릎 관절을 튼튼히 합니다.', bonusPoints: 10, badge: '🦵' },
+        { id: 'w-085', word: '맥문동', category: 'herb', categoryLabel: '약초', meaning: '보랏빛 꽃이 피며 폐와 기관지를 촉촉하게 적셔주는 명약초입니다.', bonusPoints: 10, badge: '💜' },
+        { id: 'w-086', word: '천마', category: 'herb', categoryLabel: '약초', meaning: '하늘에서 떨어져 마목을 치료했다는 두통과 중풍 예방 약초입니다.', bonusPoints: 10, badge: '⚡' },
+        { id: 'w-087', word: '창출', category: 'herb', categoryLabel: '약초', meaning: '삽주의 뿌리로 소화기를 튼튼히 하고 습한 기운을 날려줍니다.', bonusPoints: 10, badge: '🌿' },
+        { id: 'w-088', word: '차가버섯', category: 'herb', categoryLabel: '약초', meaning: '살아있는 자작나무의 수액을 먹고 자란 신비의 항암 버섯입니다.', bonusPoints: 10, badge: '🍄' },
+        { id: 'w-089', word: '백출', category: 'herb', categoryLabel: '약초', meaning: '비위의 기능을 도와 입맛을 돋우고 소화를 편안히 돕습니다.', bonusPoints: 10, badge: '✨' },
+        { id: 'w-090', word: '구절초', category: 'herb', categoryLabel: '약초', meaning: '음력 9월 9일에 꺾는 국화과 약초로 몸을 따뜻하게 보호합니다.', bonusPoints: 10, badge: '🌸' },
+        { id: 'w-091', word: '삽주', category: 'herb', categoryLabel: '약초', meaning: '소화 장애와 붓기를 가라앉혀 주는 산속의 야생 약초입니다.', bonusPoints: 10, badge: '🌱' },
+        { id: 'w-092', word: '방풍', category: 'herb', categoryLabel: '약초', meaning: '풍을 막아준다는 뜻으로 감기와 신경통을 다스리는 명약초입니다.', bonusPoints: 10, badge: '🍃' },
+        { id: 'w-093', word: '고들빼기', category: 'herb', categoryLabel: '약초', meaning: '쌉싸름한 쓴맛으로 입맛을 돋우고 간을 해독해 주는 산야초입니다.', bonusPoints: 10, badge: '🥗' },
+        { id: 'w-094', word: '어성초', category: 'herb', categoryLabel: '약초', meaning: '물고기 비린내가 난다는 이름처럼 강력한 항균·피부 진정 약초입니다.', bonusPoints: 10, badge: '🐟' },
+        { id: 'w-095', word: '음양곽', category: 'herb', categoryLabel: '약초', meaning: '삼지구엽초의 전초로 양기를 북돋우고 뼈를 튼튼하게 돕습니다.', bonusPoints: 10, badge: '⚡' },
+        { id: 'w-096', word: '영지버섯', category: 'herb', categoryLabel: '약초', meaning: '불로장생을 꿈꾸던 진시황이 찾던 신령스러운 십장생 명약초입니다.', bonusPoints: 10, badge: '🍄' },
+        { id: 'w-097', word: '상황버섯', category: 'herb', categoryLabel: '약초', meaning: '뽕나무 고목에 자라나는 황금빛 약용 버섯으로 면역 활력을 줍니다.', bonusPoints: 10, badge: '🍄' },
+        { id: 'w-098', word: '동충하초', category: 'herb', categoryLabel: '약초', meaning: '겨울엔 곤충, 여름엔 풀로 자라나는 신비로운 면역력 증강 약초입니다.', bonusPoints: 10, badge: '🐛' },
+        { id: 'w-099', word: '산약', category: 'herb', categoryLabel: '약초', meaning: '산에서 나는 장어라 불리는 마의 뿌리로 기력을 강하게 보합니다.', bonusPoints: 10, badge: '🥔' },
+        { id: 'w-100', word: '불로초', category: 'herb', categoryLabel: '약초', meaning: '늙지 않고 오래 살게 돕는다는 십장생 그림 속 전설의 명약초입니다.', bonusPoints: 10, badge: '👑' }
+      ];
+
+      function getRandomWords(count = 20, pool = POOL_100_NATURE_WORDS) {
+        const cloned = [...pool];
+        for (let i = cloned.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [cloned[i], cloned[j]] = [cloned[j], cloned[i]];
+        }
+        return cloned.slice(0, count);
+      }
+
+      const STAGE_CONFIGS = [
+        { stage: 1, title: '1단계: 초록 숲의 첫걸음 (랜덤 20단어)', subtitle: '100개 단어 풀에서 무작위로 추출된 20개 단어로 타자를 연습하세요.', themeColor: 'from-emerald-600 to-teal-700', words: getRandomWords(20) },
+        { stage: 2, title: '2단계: 상쾌한 솔바람 숲길 (랜덤 20단어)', subtitle: '피톤치드와 건강 약초가 가득한 새로운 20개 랜덤 단어입니다.', themeColor: 'from-teal-600 to-cyan-700', words: getRandomWords(20) },
+        { stage: 3, title: '3단계: 꽃피는 정원과 치유 약초 (랜덤 20단어)', subtitle: '아름다운 꽃나무와 신비한 약초를 만나는 20단어 랜덤 코스입니다.', themeColor: 'from-green-600 to-emerald-700', words: getRandomWords(20) },
+        { stage: 4, title: '4단계: 고산지대 침엽수와 야생 약초 (랜덤 20단어)', subtitle: '지리산과 한라산의 강인한 수목과 본초 20단어를 마스터하세요.', themeColor: 'from-emerald-700 to-lime-700', words: getRandomWords(20) },
+        { stage: 5, title: '5단계: 향기로운 수목과 전통 비방 (랜덤 20단어)', subtitle: '은은한 나무 향기와 마음을 평온하게 해주는 20단어입니다.', themeColor: 'from-teal-700 to-emerald-800', words: getRandomWords(20) },
+        { stage: 6, title: '6단계: 태고의 원시림과 신비 약초 (랜덤 20단어)', subtitle: '천년의 숲을 지키는 비자나무와 기력을 채워주는 20단어입니다.', themeColor: 'from-emerald-800 to-teal-900', words: getRandomWords(20) },
+        { stage: 7, title: '7단계: 생명의 대삼림 (최종 랜덤 20단어)', subtitle: '최종 20단어를 멋지게 완주하고 영광의 "참 잘했어요"를 받으세요!', themeColor: 'from-emerald-900 via-teal-800 to-green-900', words: getRandomWords(20) }
+      ];
+
+      // =========================================================================
+      // 3. KOREAN IME & STROKE ENGINE (자모 분해, 정확도 및 CPM 측정)
+      // =========================================================================
+      const CHO_LIST = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+      const JUNG_LIST = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'];
+      const JONG_LIST = ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+
+      const CHO_STROKES = { 'ㄱ': 1, 'ㄲ': 2, 'ㄴ': 1, 'ㄷ': 1, 'ㄸ': 2, 'ㄹ': 1, 'ㅁ': 1, 'ㅂ': 1, 'ㅃ': 2, 'ㅅ': 1, 'ㅆ': 2, 'ㅇ': 1, 'ㅈ': 1, 'ㅉ': 2, 'ㅊ': 1, 'ㅋ': 1, 'ㅌ': 1, 'ㅍ': 1, 'ㅎ': 1 };
+      const JUNG_STROKES = { 'ㅏ': 1, 'ㅐ': 2, 'ㅑ': 1, 'ㅒ': 2, 'ㅓ': 1, 'ㅔ': 2, 'ㅕ': 1, 'ㅖ': 2, 'ㅗ': 1, 'ㅘ': 2, 'ㅙ': 3, 'ㅚ': 2, 'ㅛ': 1, 'ㅜ': 1, 'ㅝ': 2, 'ㅞ': 3, 'ㅟ': 2, 'ㅠ': 1, 'ㅡ': 1, 'ㅢ': 2, 'ㅣ': 1 };
+      const JONG_STROKES = { '': 0, 'ㄱ': 1, 'ㄲ': 2, 'ㄳ': 2, 'ㄴ': 1, 'ㄵ': 2, 'ㄶ': 2, 'ㄷ': 1, 'ㄹ': 1, 'ㄺ': 2, 'ㄻ': 2, 'ㄼ': 2, 'ㄽ': 2, 'ㄾ': 2, 'ㄿ': 2, 'ㅀ': 2, 'ㅁ': 1, 'ㅂ': 1, 'ㅄ': 2, 'ㅅ': 1, 'ㅆ': 2, 'ㅇ': 1, 'ㅈ': 1, 'ㅊ': 1, 'ㅋ': 1, 'ㅌ': 1, 'ㅍ': 1, 'ㅎ': 1 };
+
+      function decomposeChar(char) {
+        const code = char.charCodeAt(0);
+        if (code >= 0xac00 && code <= 0xd7a3) {
+          const syllableIndex = code - 0xac00;
+          const jongIndex = syllableIndex % 28;
+          const jungIndex = Math.floor((syllableIndex - jongIndex) / 28) % 21;
+          const choIndex = Math.floor((syllableIndex - jongIndex) / (28 * 21));
+
+          const cho = CHO_LIST[choIndex];
+          const jung = JUNG_LIST[jungIndex];
+          const jong = JONG_LIST[jongIndex];
+          const strokes = (CHO_STROKES[cho] || 1) + (JUNG_STROKES[jung] || 1) + (JONG_STROKES[jong] || 0);
+
+          return { char, isHangul: true, cho, jung, jong, strokes };
+        }
+        return { char, isHangul: false, strokes: 1 };
+      }
+
+      function countKoreanStrokes(text) {
+        let count = 0;
+        for (let i = 0; i < text.length; i++) {
+          count += decomposeChar(text[i]).strokes;
+        }
+        return count;
+      }
+
+      function calculateCPM(strokes, elapsedSeconds) {
+        if (elapsedSeconds <= 0 || strokes <= 0) return 0;
+        return Math.round((strokes / elapsedSeconds) * 60);
+      }
+
+      // =========================================================================
+      // 4. SYNTHESIZED AUDIO & BGM MANAGER
+      // =========================================================================
+      class SoundEffects {
+        constructor() {
+          this.ctx = null;
+          this.isMuted = localStorage.getItem('typing_sound_muted') === 'true';
+        }
+
+        initCtx() {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) this.ctx = new AudioCtx();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        }
+
+        toggleMute() {
+          this.isMuted = !this.isMuted;
+          localStorage.setItem('typing_sound_muted', String(this.isMuted));
+          return this.isMuted;
+        }
+
+        getMuted() {
+          return this.isMuted;
+        }
+
+        playKeypress() {
+          if (this.isMuted) return;
+          try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(420 + Math.random() * 40, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.04);
+            gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.04);
+          } catch {}
+        }
+
+        playWordCorrect() {
+          if (this.isMuted) return;
+          try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            [523.25, 659.25].forEach((freq, idx) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+              gain.gain.setValueAtTime(0.08, now + idx * 0.06);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.2);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now + idx * 0.06);
+              osc.stop(now + idx * 0.06 + 0.22);
+            });
+          } catch {}
+        }
+
+        playHerbBonus() {
+          if (this.isMuted) return;
+          try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            [587.33, 739.99, 880, 1174.66].forEach((freq, idx) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+              gain.gain.setValueAtTime(0.1, now + idx * 0.05);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.3);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now + idx * 0.05);
+              osc.stop(now + idx * 0.05 + 0.32);
+            });
+          } catch {}
+        }
+
+        playPerfectBonus() {
+          if (this.isMuted) return;
+          try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            [783.99, 1046.5].forEach((freq, idx) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+              gain.gain.setValueAtTime(0.09, now + idx * 0.07);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.25);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now + idx * 0.07);
+              osc.stop(now + idx * 0.07 + 0.27);
+            });
+          } catch {}
+        }
+
+        playDingDongWrong() {
+          if (this.isMuted) return;
+          try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            // 띵 (G5)
+            const osc1 = this.ctx.createOscillator();
+            const gain1 = this.ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(784, now);
+            gain1.gain.setValueAtTime(0.12, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+            osc1.connect(gain1);
+            gain1.connect(this.ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.3);
+
+            // 동 (D5)
+            const osc2 = this.ctx.createOscillator();
+            const gain2 = this.ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(587.33, now + 0.16);
+            gain2.gain.setValueAtTime(0.14, now + 0.16);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.16 + 0.45);
+            osc2.connect(gain2);
+            gain2.connect(this.ctx.destination);
+            osc2.start(now + 0.16);
+            osc2.stop(now + 0.16 + 0.48);
+          } catch {}
+        }
+
+        playTimeout() {
+          if (this.isMuted) return;
+          try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(260, now);
+            osc.frequency.linearRampToValueAtTime(180, now + 0.2);
+            gain.gain.setValueAtTime(0.06, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.22);
+          } catch {}
+        }
+
+        playStageClear() {
+          if (this.isMuted) return;
+          try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+              gain.gain.setValueAtTime(0.12, now + idx * 0.1);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.35);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now + idx * 0.1);
+              osc.stop(now + idx * 0.1 + 0.38);
+            });
+          } catch {}
+        }
+
+        playGrandVictory() {
+          if (this.isMuted) return;
+          try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const notes = [
+              { f: 523.25, t: 0.0, d: 0.18 },
+              { f: 523.25, t: 0.2, d: 0.18 },
+              { f: 523.25, t: 0.4, d: 0.18 },
+              { f: 659.25, t: 0.6, d: 0.3 },
+              { f: 783.99, t: 0.9, d: 0.3 },
+              { f: 1046.5, t: 1.25, d: 0.8 },
+            ];
+            notes.forEach(({ f, t, d }) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(f, now + t);
+              gain.gain.setValueAtTime(0.15, now + t);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + t + d);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now + t);
+              osc.stop(now + t + d + 0.05);
+            });
+          } catch {}
+        }
+      }
+
+      const sounds = new SoundEffects();
+
+      class BGMManager {
+        constructor() {
+          this.audio = null;
+          this.isPlaying = false;
+          this.volume = 0.35;
+          this.isPausedByUser = localStorage.getItem('bgm_paused_by_user') === 'true';
+          const savedVol = localStorage.getItem('bgm_volume');
+          if (savedVol !== null) {
+            const p = parseFloat(savedVol);
+            if (!isNaN(p) && p >= 0 && p <= 1) this.volume = p;
+          }
+          this.listeners = new Set();
+          this.userInteracted = false;
+          this.setupAutoPlay();
+        }
+
+        initAudio() {
+          if (this.audio) return;
+          try {
+            // Supports same-directory relative mp3 path for GitHub Pages and local double-click
+            this.audio = new Audio('./cybernetic-overload.mp3');
+            this.audio.loop = true;
+            this.audio.volume = this.volume;
+            this.audio.preload = 'auto';
+
+            this.audio.addEventListener('play', () => {
+              this.isPlaying = true;
+              this.notify();
+            });
+            this.audio.addEventListener('pause', () => {
+              this.isPlaying = false;
+              this.notify();
+            });
+            this.audio.addEventListener('error', () => {
+              // Fallback to /cybernetic-overload.mp3 or public/cybernetic-overload.mp3
+              if (this.audio && !this.audio.src.includes('public/')) {
+                this.audio.src = '../public/cybernetic-overload.mp3';
+              }
+            });
+          } catch (e) {
+            console.warn('Audio init error', e);
+          }
+        }
+
+        setupAutoPlay() {
+          const handleGesture = () => {
+            if (this.userInteracted) return;
+            this.userInteracted = true;
+            if (!this.isPausedByUser) {
+              this.play().catch(() => {});
+            }
+            window.removeEventListener('pointerdown', handleGesture);
+            window.removeEventListener('keydown', handleGesture);
+          };
+          window.addEventListener('pointerdown', handleGesture, { passive: true });
+          window.addEventListener('keydown', handleGesture, { passive: true });
+        }
+
+        async play(force = false) {
+          if (!force && this.isPausedByUser) return;
+          this.initAudio();
+          if (!this.audio) return;
+          try {
+            this.audio.volume = this.volume;
+            await this.audio.play();
+            this.isPlaying = true;
+            this.notify();
+          } catch {}
+        }
+
+        pause() {
+          if (!this.audio) return;
+          this.audio.pause();
+          this.isPlaying = false;
+          this.notify();
+        }
+
+        stop() {
+          if (!this.audio) return;
+          this.audio.pause();
+          try { this.audio.currentTime = 0; } catch {}
+          this.isPlaying = false;
+          this.notify();
+        }
+
+        togglePlay() {
+          if (this.isPlaying) {
+            this.isPausedByUser = true;
+            localStorage.setItem('bgm_paused_by_user', 'true');
+            this.pause();
+            return false;
+          } else {
+            this.isPausedByUser = false;
+            localStorage.setItem('bgm_paused_by_user', 'false');
+            this.play(true).catch(() => {});
+            return true;
+          }
+        }
+
+        setVolume(val) {
+          this.volume = Math.max(0, Math.min(1, val));
+          if (this.audio) this.audio.volume = this.volume;
+          localStorage.setItem('bgm_volume', String(this.volume));
+          this.notify();
+        }
+
+        subscribe(fn) {
+          this.listeners.add(fn);
+          fn({ isPlaying: this.isPlaying, volume: this.volume, isPausedByUser: this.isPausedByUser });
+          return () => this.listeners.delete(fn);
+        }
+
+        notify() {
+          const state = { isPlaying: this.isPlaying, volume: this.volume, isPausedByUser: this.isPausedByUser };
+          this.listeners.forEach((fn) => fn(state));
+        }
+
+        getState() {
+          return { isPlaying: this.isPlaying, volume: this.volume, isPausedByUser: this.isPausedByUser };
+        }
+      }
+
+      const bgm = new BGMManager();
+
+      // =========================================================================
+      // 5. LOCALSTORAGE LEADERBOARD UTILITIES (typingRanking, TOP 10, 동점 처리)
+      // =========================================================================
+      const RANKING_STORAGE_KEY = 'typingRanking';
+
+      function getFormattedCurrentDate(date = new Date()) {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const hh = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
+      }
+
+      function getTypingRankingList() {
+        try {
+          const raw = localStorage.getItem(RANKING_STORAGE_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed.slice(0, 10);
+        } catch {}
+        return [];
+      }
+
+      function calculateDisplayRankings(list, newRecordRef) {
+        const ranked = [];
+        for (let i = 0; i < list.length; i++) {
+          let rank = 1;
+          if (i === 0) {
+            rank = 1;
+          } else {
+            if (list[i].점수 === list[i - 1].점수) {
+              rank = ranked[i - 1].순위;
+            } else {
+              rank = i + 1;
+            }
+          }
+
+          const isNew = Boolean(
+            newRecordRef &&
+            list[i].이름 === newRecordRef.이름 &&
+            list[i].날짜 === newRecordRef.날짜 &&
+            list[i].점수 === newRecordRef.점수
+          );
+
+          ranked.push({
+            ...list[i],
+            순위: rank,
+            originalIndex: i,
+            isNew,
+          });
+        }
+        return ranked;
+      }
+
+      function getProcessedRankings(newRecordRef) {
+        const list = getTypingRankingList();
+        return calculateDisplayRankings(list, newRecordRef);
+      }
+
+      function saveTypingRecord(name, score) {
+        const formattedDate = getFormattedCurrentDate();
+        const newRecord = {
+          날짜: formattedDate,
+          이름: name.slice(0, 8),
+          점수: score,
+        };
+
+        const existingList = getTypingRankingList();
+        const combined = [
+          ...existingList.map((item, idx) => ({ ...item, originalIndex: idx })),
+          { ...newRecord, originalIndex: existingList.length },
+        ];
+
+        combined.sort((a, b) => {
+          if (b.점수 !== a.점수) return b.점수 - a.점수;
+          return a.originalIndex - b.originalIndex;
+        });
+
+        const top10WithIndex = combined.slice(0, 10);
+        const top10ToStore = top10WithIndex.map((item) => ({
+          날짜: item.날짜,
+          이름: item.이름,
+          점수: item.점수,
+        }));
+
+        try {
+          localStorage.setItem(RANKING_STORAGE_KEY, JSON.stringify(top10ToStore));
+        } catch {}
+
+        const rankings = calculateDisplayRankings(top10ToStore, newRecord);
+        const found = rankings.find((r) => r.isNew);
+        const userRank = found ? found.순위 : null;
+
+        return { savedItem: newRecord, rankings, userRank };
+      }
+
+      function clearAllTypingRankings() {
+        try {
+          localStorage.removeItem(RANKING_STORAGE_KEY);
+        } catch {}
+      }
+
+      // =========================================================================
+      // 6. REACT COMPONENTS
+      // =========================================================================
+
+      // --- Header Component ---
+      const Header = ({
+        currentStage,
+        totalStages,
+        isMuted,
+        onToggleMute,
+        onRestartCurrent,
+        onOpenStageSelect,
+        onShuffleWords,
+        isLargeFont,
+        onToggleFontSize,
+        onOpenHallOfFame,
+      }) => {
+        const [bgmState, setBgmState] = useState(bgm.getState());
+        const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+
+        useEffect(() => {
+          const unsubscribe = bgm.subscribe((state) => {
+            setBgmState({ ...state });
+          });
+          return () => unsubscribe();
+        }, []);
+
+        return (
+          <header className="w-full bg-emerald-900/80 backdrop-blur-md border-b border-emerald-700/50 px-4 py-3 sticky top-0 z-30 shadow-lg">
+            <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-950/40 text-emerald-950">
+                  <Icon name="trees" className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl md:text-2xl font-black tracking-tight text-emerald-100 flex items-center gap-1.5">
+                      초록숲 타자연습
+                    </h1>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-400 text-amber-950 shadow-sm flex items-center gap-1">
+                      <Icon name="sparkles" className="w-3 h-3 fill-amber-950" />
+                      약초 +10점!
+                    </span>
+                  </div>
+                  <p className="text-xs text-emerald-300/90 hidden sm:block">
+                    100개 단어 풀 · 랜덤 20단어 추출 타자 게임
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* BGM Control */}
+                <div className="relative flex items-center bg-emerald-950/80 border border-emerald-700/70 rounded-xl p-1 shadow-inner">
+                  <button
+                    onClick={() => bgm.togglePlay()}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm ${
+                      bgmState.isPlaying
+                        ? 'bg-amber-400 text-amber-950 hover:bg-amber-300 shadow-amber-400/30'
+                        : 'bg-emerald-800/90 text-emerald-300 hover:bg-emerald-700 hover:text-white border border-emerald-600/50'
+                    }`}
+                    title={bgmState.isPlaying ? '음악 끄기 (OFF)' : '음악 켜기 (ON)'}
+                  >
+                    {bgmState.isPlaying ? (
+                      <>
+                        <Icon name="pause" className="w-3.5 h-3.5 fill-amber-950" />
+                        <span>음악 끄기</span>
+                        <span className="flex items-end gap-0.5 h-3 ml-0.5">
+                          <span className="w-0.5 bg-amber-950 h-full animate-pulse" />
+                          <span className="w-0.5 bg-amber-950 h-2/3 animate-ping" />
+                          <span className="w-0.5 bg-amber-950 h-4/5 animate-pulse" />
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="play" className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400" />
+                        <span>음악 켜기</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setShowVolumeSlider((p) => !p)}
+                    className="p-1 px-1.5 text-emerald-400 hover:text-emerald-200 text-xs rounded transition-colors"
+                    title="배경음악 볼륨 조절"
+                  >
+                    {Math.round(bgmState.volume * 100)}%
+                  </button>
+
+                  {showVolumeSlider && (
+                    <div className="absolute top-full mt-2 right-0 bg-emerald-950 border border-emerald-700 rounded-xl p-2.5 shadow-xl flex items-center gap-2 z-40 animate-fade-in w-44">
+                      <Icon name="music" className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={bgmState.volume}
+                        onChange={(e) => bgm.setVolume(parseFloat(e.target.value))}
+                        className="w-full accent-amber-400 h-1.5 bg-emerald-800 rounded-lg cursor-pointer"
+                      />
+                      <span className="text-[11px] font-bold text-amber-300 w-8 text-right">
+                        {Math.round(bgmState.volume * 100)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 🏆 명예의 전당 버튼 */}
+                <button
+                  onClick={onOpenHallOfFame}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/30 to-yellow-500/20 hover:from-amber-500/40 hover:to-yellow-500/30 text-amber-300 border border-amber-400/60 text-xs sm:text-sm font-black transition-all shadow-sm active:scale-95 cursor-pointer"
+                  title="명예의 전당 순위표 보기"
+                >
+                  <span className="text-sm">🏆</span>
+                  <span>명예의 전당</span>
+                </button>
+
+                {/* 단계 표시 및 선택 버튼 */}
+                <button
+                  onClick={onOpenStageSelect}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700/80 text-emerald-100 border border-emerald-600/50 text-sm font-semibold transition-all shadow-sm active:scale-95"
+                  title="단계 선택 및 100개 단어 도감"
+                >
+                  <Icon name="book-open" className="w-4 h-4 text-emerald-300" />
+                  <span className="font-bold text-amber-300">{currentStage}</span>
+                  <span className="text-emerald-300">/ {totalStages}단계</span>
+                </button>
+
+                {/* 20단어 재추출 */}
+                <button
+                  onClick={onShuffleWords}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-teal-800/70 hover:bg-teal-700 text-teal-200 border border-teal-600/60 text-xs font-bold transition-all active:scale-95 shadow-sm"
+                  title="100개 단어 중 새로운 랜덤 20개 단어 뽑기"
+                >
+                  <Icon name="rotate-ccw" className="w-3.5 h-3.5 text-amber-300" />
+                  <span className="hidden sm:inline">랜덤 20단어 섞기</span>
+                </button>
+
+                {/* 글씨 확대 토글 */}
+                <button
+                  onClick={onToggleFontSize}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                    isLargeFont
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                      : 'bg-emerald-800/60 text-emerald-200 border-emerald-700/60 hover:bg-emerald-700/60'
+                  }`}
+                  title="글씨 크기 (2배 / 2.5배 초대형)"
+                >
+                  글씨: {isLargeFont ? '초대형' : '2배 큰글'}
+                </button>
+
+                {/* 효과음 토글 */}
+                <button
+                  onClick={onToggleMute}
+                  className="p-2 rounded-lg bg-emerald-800/60 hover:bg-emerald-700/70 text-emerald-200 border border-emerald-700/60 transition-all active:scale-95"
+                  title={isMuted ? '효과음 켜기' : '효과음 끄기'}
+                >
+                  {isMuted ? <Icon name="volume-x" className="w-4 h-4 text-rose-300" /> : <Icon name="volume-2" className="w-4 h-4 text-emerald-300" />}
+                </button>
+
+                {/* 현재 단계 다시 시작 */}
+                <button
+                  onClick={onRestartCurrent}
+                  className="p-2 rounded-lg bg-emerald-800/60 hover:bg-emerald-700/70 text-emerald-200 border border-emerald-700/60 transition-all active:scale-95"
+                  title="현재 단계 다시 시작"
+                >
+                  <Icon name="rotate-ccw" className="w-4 h-4 text-emerald-300" />
+                </button>
+              </div>
+            </div>
+          </header>
+        );
+      };
+
+      // --- StageProgress Component ---
+      const STAGE_ICONS = ['🌱', '🌿', '🌲', '🌳', '🌺', '👑', '🏆'];
+
+      const StageProgress = ({ currentStage, completedStages, currentWordIndex, totalWordsInStage }) => {
+        return (
+          <div className="w-full bg-emerald-950/80 border border-emerald-800/60 rounded-2xl p-3.5 shadow-md">
+            <div className="flex items-center justify-between relative mb-3">
+              <div className="absolute top-1/2 left-4 right-4 h-1 bg-emerald-900 -translate-y-1/2 z-0" />
+              <div
+                className="absolute top-1/2 left-4 h-1 bg-gradient-to-r from-emerald-400 to-amber-400 -translate-y-1/2 z-0 transition-all duration-500"
+                style={{
+                  width: `${Math.min(100, Math.max(0, ((currentStage - 1) / (STAGE_CONFIGS.length - 1)) * 100))}%`,
+                }}
+              />
+
+              {STAGE_CONFIGS.map((stageItem) => {
+                const isDone = completedStages.includes(stageItem.stage);
+                const isCurrent = stageItem.stage === currentStage;
+
+                return (
+                  <div key={stageItem.stage} className="relative z-10 flex flex-col items-center">
+                    <div
+                      className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-md ${
+                        isCurrent
+                          ? 'bg-amber-400 text-amber-950 ring-4 ring-amber-400/40 scale-110 animate-pulse'
+                          : isDone
+                          ? 'bg-emerald-500 text-white ring-2 ring-emerald-400/50'
+                          : 'bg-emerald-900 text-emerald-400 border border-emerald-700'
+                      }`}
+                    >
+                      {isDone ? (
+                        <Icon name="check" className="w-5 h-5 stroke-[3]" />
+                      ) : (
+                        <span className="text-base select-none">{STAGE_ICONS[stageItem.stage - 1]}</span>
+                      )}
+                    </div>
+                    <span
+                      className={`text-[11px] md:text-xs font-semibold mt-1 transition-colors ${
+                        isCurrent ? 'text-amber-300 font-bold' : isDone ? 'text-emerald-300' : 'text-emerald-500'
+                      }`}
+                    >
+                      {stageItem.stage}단계
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 border-t border-emerald-800/60 text-xs gap-2">
+              <div className="flex items-center gap-2 flex-1">
+                <span className="font-semibold text-emerald-300 shrink-0">단어 진행:</span>
+                <div className="flex items-center gap-1 flex-1 max-w-md">
+                  {Array.from({ length: totalWordsInStage }).map((_, idx) => {
+                    const isWordCompleted = idx < currentWordIndex;
+                    const isWordActive = idx === currentWordIndex;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`h-2.5 rounded-full transition-all duration-200 flex-1 ${
+                          isWordCompleted
+                            ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50'
+                            : isWordActive
+                            ? 'bg-amber-400 animate-pulse ring-1 ring-amber-300'
+                            : 'bg-emerald-900/80 border border-emerald-800/70'
+                        }`}
+                        title={`${idx + 1}번째 단어 / ${totalWordsInStage}단어`}
+                      />
+                    );
+                  })}
+                </div>
+                <span className="font-black text-amber-300 shrink-0">
+                  {Math.min(currentWordIndex + 1, totalWordsInStage)} / {totalWordsInStage}단어
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1 text-emerald-400 font-medium shrink-0">
+                <Icon name="sparkles" className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                <span>7단계 완주 시 "참잘했어요" 수여!</span>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- ScoreBoard Component ---
+      const ScoreBoard = ({
+        score,
+        stageTimeLeft,
+        wordTimeLeft,
+        currentCPM,
+        averageCPM,
+        accuracy,
+        perfectWordCount,
+        herbCount,
+      }) => {
+        const wordTimePercent = Math.max(0, Math.min(100, (wordTimeLeft / 10) * 100));
+        const isWordTimeUrgent = wordTimeLeft <= 3;
+        const stageTimePercent = Math.max(0, Math.min(100, (stageTimeLeft / 60) * 100));
+        const isStageTimeUrgent = stageTimeLeft <= 10;
+
+        return (
+          <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {/* 1. Score Card */}
+            <div className="bg-emerald-900/60 border border-emerald-700/60 rounded-xl p-3 flex flex-col justify-between shadow-sm">
+              <div className="flex items-center justify-between text-xs text-emerald-300 font-medium">
+                <span className="flex items-center gap-1">
+                  <Icon name="award" className="w-3.5 h-3.5 text-amber-400" />
+                  현재 점수
+                </span>
+                <span className="text-[11px] text-emerald-400 font-normal">단어당 기본 10점</span>
+              </div>
+              <div className="mt-1 flex items-baseline justify-between">
+                <span className="text-3xl font-black text-amber-300 tracking-tight">{score}</span>
+                <span className="text-xs font-bold text-amber-400/90">점</span>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-emerald-300/80 mt-1 border-t border-emerald-800/60 pt-1">
+                <span>무오타 +3점: <b className="text-emerald-200">{perfectWordCount}회</b></span>
+                <span>•</span>
+                <span>약초 +10점: <b className="text-amber-200">{herbCount}회</b></span>
+              </div>
+            </div>
+
+            {/* 2. Typing Speed (CPM) */}
+            <div className="bg-emerald-900/60 border border-emerald-700/60 rounded-xl p-3 flex flex-col justify-between shadow-sm">
+              <div className="flex items-center justify-between text-xs text-emerald-300 font-medium">
+                <span className="flex items-center gap-1">
+                  <Icon name="zap" className="w-3.5 h-3.5 text-cyan-400" />
+                  타자 속도
+                </span>
+                <span className="text-[11px] text-cyan-300">실시간 타수</span>
+              </div>
+              <div className="mt-1 flex items-baseline justify-between">
+                <span className="text-3xl font-black text-cyan-300 tracking-tight">{currentCPM}</span>
+                <span className="text-xs font-bold text-cyan-400/90">타/분</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-emerald-300/80 mt-1 border-t border-emerald-800/60 pt-1">
+                <span>평균: <b className="text-cyan-200">{averageCPM}타</b></span>
+                <span className="flex items-center gap-0.5">
+                  <Icon name="target" className="w-3 h-3 text-emerald-300" />
+                  정확도: <b className="text-emerald-200">{accuracy}%</b>
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Word Timer (10초 제한) */}
+            <div className={`border rounded-xl p-3 flex flex-col justify-between shadow-sm transition-colors ${
+              isWordTimeUrgent ? 'bg-rose-950/70 border-rose-500/70 animate-pulse' : 'bg-emerald-900/60 border-emerald-700/60'
+            }`}>
+              <div className="flex items-center justify-between text-xs font-medium">
+                <span className={`flex items-center gap-1 ${isWordTimeUrgent ? 'text-rose-300' : 'text-emerald-300'}`}>
+                  <Icon name="clock" className={`w-3.5 h-3.5 ${isWordTimeUrgent ? 'text-rose-400' : 'text-emerald-300'}`} />
+                  단어 제한시간
+                </span>
+                <span className="text-[11px] text-amber-300 font-semibold">10초 제한</span>
+              </div>
+              <div className="mt-1 flex items-baseline justify-between">
+                <span className={`text-3xl font-black tracking-tight ${isWordTimeUrgent ? 'text-rose-300' : 'text-emerald-100'}`}>
+                  {wordTimeLeft.toFixed(1)}
+                </span>
+                <span className={`text-xs font-bold ${isWordTimeUrgent ? 'text-rose-400' : 'text-emerald-400'}`}>초</span>
+              </div>
+              <div className="w-full bg-emerald-950/80 rounded-full h-1.5 mt-2 overflow-hidden border border-emerald-800/50">
+                <div
+                  className={`h-full transition-all duration-100 rounded-full ${
+                    isWordTimeUrgent ? 'bg-rose-500' : wordTimePercent < 50 ? 'bg-amber-400' : 'bg-emerald-400'
+                  }`}
+                  style={{ width: `${wordTimePercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* 4. Stage Round Timer (60초 제한) */}
+            <div className={`border rounded-xl p-3 flex flex-col justify-between shadow-sm transition-colors ${
+              isStageTimeUrgent ? 'bg-amber-950/70 border-amber-500/70' : 'bg-emerald-900/60 border-emerald-700/60'
+            }`}>
+              <div className="flex items-center justify-between text-xs font-medium">
+                <span className={`flex items-center gap-1 ${isStageTimeUrgent ? 'text-amber-300' : 'text-emerald-300'}`}>
+                  <Icon name="timer" className={`w-3.5 h-3.5 ${isStageTimeUrgent ? 'text-amber-400' : 'text-emerald-300'}`} />
+                  라운드 제한시간
+                </span>
+                <span className="text-[11px] text-amber-300 font-semibold">한판 60초</span>
+              </div>
+              <div className="mt-1 flex items-baseline justify-between">
+                <span className={`text-3xl font-black tracking-tight ${isStageTimeUrgent ? 'text-amber-300' : 'text-emerald-100'}`}>
+                  {stageTimeLeft}
+                </span>
+                <span className={`text-xs font-bold ${isStageTimeUrgent ? 'text-amber-400' : 'text-emerald-400'}`}>초</span>
+              </div>
+              <div className="w-full bg-emerald-950/80 rounded-full h-1.5 mt-2 overflow-hidden border border-emerald-800/50">
+                <div
+                  className={`h-full transition-all duration-300 rounded-full ${isStageTimeUrgent ? 'bg-rose-400' : 'bg-teal-400'}`}
+                  style={{ width: `${stageTimePercent}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- TypingArea Component ---
+      const TypingArea = ({
+        currentWord,
+        userInput,
+        onInputChange,
+        onSubmitWord,
+        isLargeFont,
+        hadMistakeOnCurrentWord,
+        lastFeedback,
+      }) => {
+        const inputRef = useRef(null);
+
+        useEffect(() => {
+          if (inputRef.current) {
+            inputRef.current.value = '';
+            inputRef.current.focus();
+          }
+        }, [currentWord.id]);
+
+        const targetChars = currentWord.word.split('');
+        const jamoGuide = targetChars
+          .map((c) => {
+            const dec = decomposeChar(c);
+            if (dec.isHangul) {
+              return [dec.cho, dec.jung, dec.jong].filter(Boolean).join(' ');
+            }
+            return c;
+          })
+          .join('  |  ');
+
+        const handleKeyDown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (userInput.trim().length > 0) {
+              onSubmitWord();
+            }
+          }
+        };
+
+        const isHerb = currentWord.category === 'herb';
+        const isMismatch = userInput.length > 0 && !currentWord.word.startsWith(userInput);
+
+        return (
+          <div
+            onClick={() => inputRef.current?.focus()}
+            className={`w-full rounded-3xl border transition-all duration-300 p-6 md:p-8 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl cursor-text ${
+              isHerb
+                ? 'bg-gradient-to-b from-amber-950/70 via-emerald-950/80 to-emerald-950 border-amber-500/50 shadow-amber-950/40'
+                : 'bg-gradient-to-b from-emerald-900/60 via-emerald-950/90 to-emerald-950 border-emerald-700/60 shadow-emerald-950/50'
+            }`}
+          >
+            {/* Word Category Badge */}
+            <div className="flex items-center gap-2 mb-3">
+              {isHerb ? (
+                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-amber-950 font-black text-sm md:text-base shadow-lg shadow-amber-500/30 animate-bounce">
+                  <Icon name="sparkles" className="w-4 h-4 fill-amber-950" />
+                  <span>약초 보너스 단어 (+10점 추가!)</span>
+                  <span className="text-xs bg-amber-950/20 px-2 py-0.5 rounded-full">총 20점~23점</span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-800/80 text-emerald-200 border border-emerald-600/50 text-sm font-semibold">
+                  <Icon name="trees" className="w-4 h-4 text-emerald-300" />
+                  <span>나무 이름</span>
+                  <span className="text-xs bg-emerald-950/40 px-2 py-0.5 rounded-full text-emerald-300">
+                    맞추면 10점 (무오타시 13점)
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Target Word in 2X / 2.5X Typography */}
+            <div className="my-3 text-center select-none">
+              <div
+                className={`font-black tracking-widest flex items-center justify-center gap-1 transition-all ${
+                  isLargeFont ? 'text-6xl sm:text-7xl md:text-8xl py-2' : 'text-5xl sm:text-6xl md:text-7xl py-1'
+                }`}
+              >
+                {targetChars.map((char, index) => {
+                  const userChar = userInput[index];
+                  const isTyped = userChar !== undefined;
+                  const isMatch = isTyped && userChar === char;
+                  const isCurrentTypingIndex = userInput.length === index;
+
+                  return (
+                    <span
+                      key={index}
+                      className={`relative px-1 rounded-xl transition-all duration-150 inline-block ${
+                        isMatch
+                          ? 'text-emerald-400 scale-105'
+                          : isTyped
+                          ? 'text-rose-400 underline decoration-rose-500 decoration-wavy'
+                          : isCurrentTypingIndex
+                          ? isHerb
+                            ? 'text-amber-200 underline decoration-amber-400 decoration-4'
+                            : 'text-emerald-100 underline decoration-emerald-400 decoration-4'
+                          : 'text-slate-400/80'
+                      }`}
+                    >
+                      {char}
+                      {isCurrentTypingIndex && (
+                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3/4 h-1.5 bg-amber-400 rounded-full animate-ping" />
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {/* Jamo decomposition hint */}
+              <div className="text-emerald-400/80 font-mono text-xs md:text-sm mt-1 tracking-wider">
+                자모 분해 힌트: <span className="text-emerald-200 font-bold">{jamoGuide}</span>
+              </div>
+
+              {/* 1-Line Educational Meaning */}
+              <p className="mt-2 text-xs sm:text-sm text-emerald-300/90 max-w-lg mx-auto bg-emerald-950/50 px-3 py-1.5 rounded-xl border border-emerald-800/40">
+                <span className="text-amber-300 font-bold mr-1">[{currentWord.categoryLabel}] {currentWord.word}:</span>
+                {currentWord.meaning}
+              </p>
+            </div>
+
+            {/* Giant Input Field */}
+            <div className="w-full max-w-xl mt-4 relative">
+              <input
+                key={currentWord.id}
+                ref={inputRef}
+                type="text"
+                value={userInput}
+                onChange={(e) => onInputChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                autoFocus
+                spellCheck={false}
+                autoComplete="off"
+                placeholder="여기에 단어를 입력하세요 (Enter 또는 Space)"
+                className={`w-full text-center font-bold tracking-wider rounded-2xl border-2 transition-all duration-150 shadow-inner bg-emerald-950/90 focus:outline-none focus:ring-4 ${
+                  isLargeFont ? 'text-3xl md:text-5xl py-4' : 'text-2xl md:text-4xl py-3.5'
+                } ${
+                  isMismatch
+                    ? 'border-rose-500 text-rose-200 focus:border-rose-400 focus:ring-rose-500/30'
+                    : isHerb
+                    ? 'border-amber-400/80 text-amber-100 focus:border-amber-300 focus:ring-amber-400/30'
+                    : 'border-emerald-500/80 text-white focus:border-emerald-300 focus:ring-emerald-400/30'
+                }`}
+              />
+
+              {isMismatch && (
+                <div className="text-center mt-1.5 text-xs text-rose-300 font-bold flex items-center justify-center gap-1 animate-pulse">
+                  <span>⚠️ 오타 감지 (띵-동!) 백스페이스로 지우고 다시 입력하세요</span>
+                </div>
+              )}
+
+              {lastFeedback && (
+                <div
+                  className={`absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg border animate-bounce z-20 ${
+                    lastFeedback.type === 'timeout'
+                      ? 'bg-rose-950 text-rose-200 border-rose-500'
+                      : lastFeedback.type === 'herb'
+                      ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-amber-950 border-amber-300'
+                      : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400'
+                  }`}
+                >
+                  <Icon name={lastFeedback.type === 'timeout' ? 'alert-circle' : 'check-circle-2'} className="w-4 h-4" />
+                  <span>{lastFeedback.text}</span>
+                  {lastFeedback.points > 0 && (
+                    <span className="bg-black/20 px-2 py-0.5 rounded-full font-black">
+                      +{lastFeedback.points}점
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-4 text-xs text-emerald-300/80">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                단어 정답: <b>+10점</b>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                약초 추가: <b>+10점</b>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className={`w-2 h-2 rounded-full ${hadMistakeOnCurrentWord ? 'bg-rose-400' : 'bg-cyan-400'}`} />
+                오타 없이 완성: <b>+3점</b> {hadMistakeOnCurrentWord && <span className="text-rose-400">(오타 발생)</span>}
+              </span>
+            </div>
+          </div>
+        );
+      };
+
+      // --- StageClearModal Component (1 ~ 6단계) ---
+      const StageClearModal = ({
+        completedStage,
+        stageScore,
+        stageCPM,
+        stageAccuracy,
+        stagePerfectCount,
+        onNextStage,
+        onRetryStage,
+      }) => {
+        useEffect(() => {
+          sounds.playStageClear();
+          const handleKey = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNextStage();
+            }
+          };
+          window.addEventListener('keydown', handleKey);
+          return () => window.removeEventListener('keydown', handleKey);
+        }, [onNextStage]);
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+            <div className="bg-gradient-to-b from-emerald-900 to-emerald-950 border border-emerald-600/70 rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl relative overflow-hidden">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 mx-auto flex items-center justify-center text-emerald-950 mb-4 shadow-lg shadow-emerald-500/30">
+                <Icon name="check-circle-2" className="w-10 h-10 stroke-[2.5]" />
+              </div>
+              <h3 className="text-2xl font-black text-emerald-100 mb-1">
+                {completedStage}단계 완주 성공!
+              </h3>
+              <p className="text-sm text-emerald-300/80 mb-5">
+                20개 단어를 모두 입력하셨습니다. 멋진 실력이에요!
+              </p>
+
+              <div className="grid grid-cols-2 gap-2.5 mb-6 text-left">
+                <div className="bg-emerald-950/70 border border-emerald-800/80 rounded-xl p-3">
+                  <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                    <Icon name="award" className="w-3.5 h-3.5 text-amber-400" />
+                    단계 획득 점수
+                  </span>
+                  <div className="text-xl font-black text-amber-300 mt-0.5">
+                    +{stageScore} <span className="text-xs font-normal text-emerald-300">점</span>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-950/70 border border-emerald-800/80 rounded-xl p-3">
+                  <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                    <Icon name="zap" className="w-3.5 h-3.5 text-cyan-400" />
+                    단계 평균 타수
+                  </span>
+                  <div className="text-xl font-black text-cyan-300 mt-0.5">
+                    {stageCPM} <span className="text-xs font-normal text-emerald-300">타/분</span>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-950/70 border border-emerald-800/80 rounded-xl p-3">
+                  <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                    <Icon name="target" className="w-3.5 h-3.5 text-emerald-300" />
+                    타자 정확도
+                  </span>
+                  <div className="text-xl font-black text-emerald-300 mt-0.5">
+                    {stageAccuracy}%
+                  </div>
+                </div>
+
+                <div className="bg-emerald-950/70 border border-emerald-800/80 rounded-xl p-3">
+                  <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                    <Icon name="sparkles" className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
+                    무오타 단어
+                  </span>
+                  <div className="text-xl font-black text-yellow-300 mt-0.5">
+                    {stagePerfectCount} <span className="text-xs font-normal text-emerald-300">개 / 20개</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                <button
+                  onClick={onNextStage}
+                  className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-emerald-950 font-black text-base transition-all transform active:scale-95 shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>{completedStage + 1}단계 시작하기</span>
+                  <Icon name="arrow-right" className="w-5 h-5 stroke-[2.5]" />
+                </button>
+                <button
+                  onClick={onRetryStage}
+                  className="w-full sm:w-auto py-3 px-3.5 rounded-xl bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 text-sm font-semibold border border-emerald-700/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Icon name="rotate-ccw" className="w-4 h-4 text-emerald-300" />
+                  <span>재도전</span>
+                </button>
+              </div>
+              <p className="text-xs text-emerald-400/60 mt-3">
+                (키보드의 <kbd className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-800 text-emerald-300">Enter</kbd> 키를 누르면 바로 다음 단계로 넘어갑니다)
+              </p>
+            </div>
+          </div>
+        );
+      };
+
+      // --- GrandVictoryModal Component (7단계 완주) ---
+      const GrandVictoryModal = ({
+        totalScore,
+        averageCPM,
+        maxCPM,
+        overallAccuracy,
+        totalPerfectWords,
+        totalHerbsTyped,
+        elapsedSeconds,
+        onRestartAll,
+        onOpenStageSelect,
+        onOpenHallOfFame,
+      }) => {
+        const [playerName, setPlayerName] = useState('');
+        const [errorMessage, setErrorMessage] = useState('');
+        const [isSaved, setIsSaved] = useState(false);
+        const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+        const [savedRank, setSavedRank] = useState(null);
+        const [justSavedRecord, setJustSavedRecord] = useState(null);
+        const inputRef = useRef(null);
+
+        useEffect(() => {
+          bgm.stop();
+          sounds.playGrandVictory();
+
+          const duration = 3.5 * 1000;
+          const animationEnd = Date.now() + duration;
+
+          const frame = () => {
+            if (typeof confetti === 'function') {
+              confetti({ particleCount: 4, angle: 60, spread: 65, origin: { x: 0 }, colors: ['#34d399', '#fbbf24', '#f87171', '#38bdf8', '#a78bfa'] });
+              confetti({ particleCount: 4, angle: 120, spread: 65, origin: { x: 1 }, colors: ['#34d399', '#fbbf24', '#f87171', '#38bdf8', '#a78bfa'] });
+            }
+            if (Date.now() < animationEnd) {
+              requestAnimationFrame(frame);
+            }
+          };
+          frame();
+        }, []);
+
+        const formatTime = (secs) => {
+          const m = Math.floor(secs / 60);
+          const s = secs % 60;
+          return `${m}분 ${s}초`;
+        };
+
+        const handleSaveRecord = () => {
+          if (isSaved) return;
+          const trimmed = playerName.trim();
+          if (!trimmed) {
+            setErrorMessage('이름을 입력해 주세요');
+            inputRef.current?.focus();
+            return;
+          }
+          setErrorMessage('');
+
+          const { savedItem, userRank } = saveTypingRecord(trimmed, totalScore);
+          setIsSaved(true);
+          setSaveSuccessMsg('기록했어요! 🎉');
+          setSavedRank(userRank);
+          setJustSavedRecord(savedItem);
+
+          sounds.playHerbBonus();
+          if (typeof confetti === 'function') {
+            confetti({ particleCount: 80, spread: 90, origin: { y: 0.6 }, colors: ['#fbbf24', '#f59e0b', '#10b981', '#38bdf8', '#f43f5e'] });
+          }
+        };
+
+        const handleKeyDown = (e) => {
+          if (e.key === 'Enter' && !isSaved) {
+            e.preventDefault();
+            handleSaveRecord();
+          }
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+            <div className="bg-gradient-to-b from-emerald-900 via-emerald-950 to-slate-950 border-2 border-amber-400/80 rounded-3xl p-5 sm:p-7 max-w-xl w-full text-center shadow-2xl relative my-auto">
+              {/* 참 잘했어요 스탬프 */}
+              <div className="flex justify-center mb-3">
+                <div className="relative inline-flex flex-col items-center justify-center p-3 rounded-full border-4 border-dashed border-rose-500 bg-rose-500/10 shadow-2xl shadow-rose-500/30 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-rose-500 flex flex-col items-center justify-center bg-rose-600/20 text-rose-300 p-2">
+                    <span className="text-xl sm:text-2xl">💮</span>
+                    <span className="text-xl sm:text-2xl font-black tracking-tight text-rose-300 drop-shadow-md">
+                      참 잘했어요
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] font-bold text-rose-300/90 tracking-widest mt-0.5">
+                      ★ 7단계 전원 완주 ★
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-amber-300 mb-1 flex items-center justify-center gap-2">
+                <Icon name="trophy" className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-400 animate-bounce" />
+                <span>7단계 전 코스 완주 달성!</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-emerald-200/90 mb-4">
+                초록 숲의 모든 나무와 귀한 약초 이름을 완벽하게 마스터하셨습니다!
+              </p>
+
+              {/* Statistics Grid */}
+              <div className="grid grid-cols-2 gap-2.5 text-left mb-4">
+                <div className="bg-emerald-900/60 border border-emerald-700/60 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-medium">
+                    <Icon name="award" className="w-3.5 h-3.5 text-amber-400" />
+                    최종 총점
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-amber-300 mt-0.5">
+                    {totalScore} <span className="text-xs font-normal text-emerald-300">점</span>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-900/60 border border-emerald-700/60 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-medium">
+                    <Icon name="zap" className="w-3.5 h-3.5 text-cyan-400" />
+                    전체 평균 타수
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-cyan-300 mt-0.5">
+                    {averageCPM} <span className="text-xs font-normal text-emerald-300">타/분</span>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-900/60 border border-emerald-700/60 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-medium">
+                    <Icon name="target" className="w-3.5 h-3.5 text-emerald-300" />
+                    타자 정확도
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-300 mt-0.5">
+                    {overallAccuracy} <span className="text-xs font-normal text-emerald-300">%</span>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-900/60 border border-emerald-700/60 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-medium">
+                    <Icon name="sparkles" className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
+                    무오타 단어
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-yellow-300 mt-0.5">
+                    {totalPerfectWords} <span className="text-xs font-normal text-emerald-300">개 / 140개</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-emerald-950/70 border border-emerald-800/80 rounded-xl p-2.5 mb-5 text-xs text-emerald-200/90 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base">🌿</span>
+                  <span>획득한 약초 보너스: <b className="text-amber-300">{totalHerbsTyped}회 (+{totalHerbsTyped * 10}점)</b></span>
+                </div>
+                <div>
+                  <span>소요시간: <b className="text-emerald-100">{formatTime(elapsedSeconds)}</b></span>
+                </div>
+              </div>
+
+              {/* 이름 입력 및 기록 남기기 */}
+              <div className="bg-emerald-950/90 border-2 border-amber-400/70 rounded-2xl p-4 sm:p-5 mb-5 text-left shadow-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="player-name-input" className="text-base sm:text-lg font-black text-amber-300 flex items-center gap-2">
+                    <Icon name="trophy" className="w-5 h-5 text-yellow-400" />
+                    <span>명예의 전당 이름 남기기</span>
+                  </label>
+                  <span className="text-xs sm:text-sm text-emerald-300/80 font-bold">
+                    ({playerName.length}/8자)
+                  </span>
+                </div>
+
+                <div className="relative">
+                  <input
+                    id="player-name-input"
+                    ref={inputRef}
+                    type="text"
+                    maxLength={8}
+                    disabled={isSaved}
+                    value={playerName}
+                    onChange={(e) => {
+                      setPlayerName(e.target.value.slice(0, 8));
+                      if (errorMessage) setErrorMessage('');
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder={isSaved ? `${playerName} (기록 완료)` : '이름을 입력하세요 (최대 8글자)'}
+                    className={`w-full text-center font-black tracking-wider rounded-xl border-2 transition-all text-xl sm:text-2xl py-3.5 px-4 shadow-inner ${
+                      isSaved
+                        ? 'bg-emerald-900/40 text-emerald-300 border-emerald-600/50 cursor-not-allowed'
+                        : errorMessage
+                        ? 'bg-emerald-900/70 border-rose-500 text-white focus:border-rose-400 focus:ring-4 focus:ring-rose-500/30'
+                        : 'bg-emerald-900/70 border-amber-400/80 text-white placeholder:text-emerald-400/60 focus:outline-none focus:ring-4 focus:border-amber-300 focus:ring-amber-400/30'
+                    }`}
+                  />
+                </div>
+
+                {errorMessage && (
+                  <div className="flex items-center gap-1.5 text-rose-300 font-bold text-sm sm:text-base mt-2 px-1 animate-pulse">
+                    <Icon name="alert-circle" className="w-5 h-5 text-rose-400 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {saveSuccessMsg && (
+                  <div className="flex items-center justify-center gap-2 text-emerald-200 bg-emerald-800/90 border-2 border-emerald-400 rounded-xl py-3 px-4 text-lg sm:text-xl font-black shadow-lg animate-bounce mt-3">
+                    <Icon name="check-circle-2" className="w-6 h-6 text-emerald-300 stroke-[2.5]" />
+                    <span>{saveSuccessMsg}</span>
+                    {savedRank && (
+                      <span className="text-sm sm:text-base font-bold text-yellow-300 ml-1">
+                        (현재 {savedRank}위 달성!)
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* 대형 버튼 2개 (동일한 디자인으로 또렷하게 표시) */}
+                <div className="mt-4 flex flex-col sm:flex-row items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={isSaved}
+                    onClick={handleSaveRecord}
+                    className={`w-full sm:flex-1 py-3.5 px-5 rounded-xl font-bold text-base sm:text-lg transition-all border flex items-center justify-center gap-2 shadow-md ${
+                      isSaved
+                        ? 'bg-emerald-800/90 text-emerald-100 border-emerald-600/70 cursor-default'
+                        : 'bg-emerald-800/90 hover:bg-emerald-700/90 text-emerald-100 border-emerald-600/70 active:scale-95 cursor-pointer'
+                    }`}
+                  >
+                    {isSaved ? (
+                      <>
+                        <Icon name="check-circle-2" className="w-5 h-5 text-emerald-300" />
+                        <span>기록 완료</span>
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="bookmark-check" className="w-5 h-5 text-emerald-300" />
+                        <span>기록 남기기</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onRestartAll}
+                    className="w-full sm:flex-1 py-3.5 px-5 rounded-xl bg-emerald-800/90 hover:bg-emerald-700/90 text-emerald-100 font-bold text-base sm:text-lg transition-all border border-emerald-600/70 active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  >
+                    <Icon name="rotate-ccw" className="w-5 h-5 text-emerald-300" />
+                    <span>{isSaved ? '새 게임 시작하기' : '기록 안 남기고 다시 하기'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 하단 명예의 전당 바로가기 */}
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => onOpenHallOfFame && onOpenHallOfFame(justSavedRecord)}
+                  className="py-3 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 hover:from-amber-400 hover:to-yellow-400 text-amber-950 font-black text-base sm:text-lg transition-all border-2 border-amber-300 shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <span className="text-xl">🏆</span>
+                  <span>명예의 전당</span>
+                  {isSaved && (
+                    <span className="text-xs bg-amber-950 text-amber-300 px-2 py-0.5 rounded-full font-bold ml-1">
+                      내 순위 확인
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onOpenStageSelect}
+                  className="py-3 px-5 rounded-2xl bg-emerald-900/70 hover:bg-emerald-800 text-emerald-200 font-bold text-sm sm:text-base transition-all border border-emerald-700/60 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Icon name="book-open" className="w-4 h-4 text-emerald-300" />
+                  <span>단계 선택 및 단어 도감</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- HallOfFameModal Component ---
+      const HallOfFameModal = ({ entries, onClose, onRestartAll, onCleared }) => {
+        const [rankingList, setRankingList] = useState(entries);
+        const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+        useEffect(() => {
+          setRankingList(entries);
+        }, [entries]);
+
+        const getRankDisplay = (rank) => {
+          if (rank === 1) return { label: '1위', medal: '🥇' };
+          if (rank === 2) return { label: '2위', medal: '🥈' };
+          if (rank === 3) return { label: '3위', medal: '🥉' };
+          return { label: `${rank}위`, medal: '' };
+        };
+
+        const handleConfirmClear = () => {
+          clearAllTypingRankings();
+          setRankingList([]);
+          setShowConfirmModal(false);
+          if (onCleared) onCleared();
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+            <div className="bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-950 border-2 border-amber-400/80 rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto relative">
+              <div className="p-4 sm:p-5 border-b border-emerald-800/80 flex items-center justify-between bg-emerald-900/70">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🏆</span>
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-black text-amber-300 flex items-center gap-2">
+                      명예의 전당 순위표
+                    </h3>
+                    <p className="text-xs text-emerald-300/80">
+                      localStorage ('typingRanking') · 최고 점수 TOP 10
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-xl bg-emerald-900/80 hover:bg-emerald-800 text-emerald-300 hover:text-white transition-colors cursor-pointer"
+                  aria-label="닫기"
+                >
+                  <Icon name="x" className="w-5 h-5" />
+                </button>
+              </div>
+
+              {rankingList.length > 0 && (
+                <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-emerald-950 text-xs font-bold text-emerald-400/90 border-b border-emerald-800/60">
+                  <div className="col-span-3 text-center">순위</div>
+                  <div className="col-span-3 text-left">이름</div>
+                  <div className="col-span-3 text-right">점수</div>
+                  <div className="col-span-3 text-right">날짜</div>
+                </div>
+              )}
+
+              <div className="p-3 sm:p-4 overflow-y-auto space-y-2 flex-1 flex flex-col justify-center">
+                {rankingList.length === 0 ? (
+                  <div className="text-center py-16 px-4 flex flex-col items-center justify-center my-auto">
+                    <span className="text-5xl mb-4 animate-bounce">🌱</span>
+                    <p className="text-xl sm:text-2xl font-black text-emerald-100 mb-2">
+                      아직 기록이 없어요.
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-amber-300">
+                      첫 번째 주인공이 되어 보세요!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {rankingList.slice(0, 10).map((item, idx) => {
+                      const { label, medal } = getRankDisplay(item.순위);
+                      const isNew = item.isNew;
+
+                      return (
+                        <div
+                          key={`${item.날짜}-${item.이름}-${idx}`}
+                          className={`grid grid-cols-12 gap-2 items-center p-3 rounded-2xl border transition-all ${
+                            isNew
+                              ? 'bg-yellow-400/25 border-2 border-yellow-400 ring-2 ring-yellow-400/60 shadow-lg shadow-yellow-500/20 text-yellow-100 animate-pulse'
+                              : item.순위 <= 3
+                              ? 'bg-emerald-900/60 border-emerald-700/80 text-emerald-100'
+                              : 'bg-emerald-950/60 border-emerald-800/60 text-emerald-200'
+                          }`}
+                        >
+                          <div className="col-span-3 flex items-center justify-center gap-1 font-black">
+                            <span className={`text-base sm:text-lg ${
+                              item.순위 === 1 ? 'text-yellow-300' : item.순위 === 2 ? 'text-slate-200' : item.순위 === 3 ? 'text-amber-400' : 'text-emerald-300/90'
+                            }`}>
+                              {label}
+                            </span>
+                            {medal && <span className="text-lg">{medal}</span>}
+                          </div>
+
+                          <div className="col-span-3 flex items-center gap-1.5 min-w-0">
+                            <span className="font-black text-sm sm:text-base text-white truncate">
+                              {item.이름}
+                            </span>
+                            {isNew && (
+                              <span className="shrink-0 bg-yellow-400 text-amber-950 font-black text-[11px] px-2 py-0.5 rounded-full shadow flex items-center gap-0.5 animate-bounce">
+                                <Icon name="sparkles" className="w-3 h-3 fill-amber-950" />
+                                <span>New</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="col-span-3 text-right">
+                            <span className="font-black text-lg sm:text-xl text-amber-300">
+                              {item.점수}
+                            </span>
+                            <span className="text-xs text-emerald-300 font-bold ml-1">점</span>
+                          </div>
+
+                          <div className="col-span-3 text-right text-[11px] sm:text-xs text-emerald-300/80 font-mono">
+                            {item.날짜}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* 하단 빨간색 '전체 기록 지우기' 버튼 & 닫기 */}
+              <div className="p-3.5 sm:p-4 border-t border-emerald-800/80 bg-emerald-950/95 flex flex-wrap items-center justify-between gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(true)}
+                  disabled={rankingList.length === 0}
+                  className={`py-2 px-3.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    rankingList.length === 0
+                      ? 'bg-rose-950/40 text-rose-300/40 border border-rose-900/30 cursor-not-allowed opacity-50'
+                      : 'bg-rose-600 hover:bg-rose-500 text-white border border-rose-400/60 shadow-md shadow-rose-950/40 active:scale-95'
+                  }`}
+                  title={rankingList.length === 0 ? '지울 기록이 없습니다' : '저장된 순위 기록 전체 삭제'}
+                >
+                  <Icon name="trash-2" className="w-4 h-4" />
+                  <span>전체 기록 지우기</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {onRestartAll && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onRestartAll();
+                      }}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-amber-950 font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md active:scale-95 transition-transform cursor-pointer"
+                    >
+                      <Icon name="rotate-ccw" className="w-4 h-4 stroke-[2.5]" />
+                      새 게임 시작
+                    </button>
+                  )}
+                  <button
+                    onClick={onClose}
+                    className="px-4 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-emerald-100 font-bold text-xs sm:text-sm transition-colors border border-emerald-600/60 cursor-pointer"
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
+
+              {/* 앱 내 확인 창 */}
+              {showConfirmModal && (
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-20 animate-fade-in">
+                  <div className="bg-gradient-to-b from-rose-950 to-slate-950 border-2 border-rose-500/80 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
+                    <div className="w-14 h-14 rounded-2xl bg-rose-600/20 border-2 border-rose-500 flex items-center justify-center mx-auto mb-3 text-rose-400 shadow-lg shadow-rose-500/20">
+                      <Icon name="alert-triangle" className="w-8 h-8 animate-bounce" />
+                    </div>
+                    <h4 className="text-lg sm:text-xl font-black text-white mb-2">
+                      기록 삭제 확인
+                    </h4>
+                    <p className="text-base sm:text-lg font-bold text-rose-200 mb-6 leading-relaxed">
+                      모든 기록이 사라집니다.<br />
+                      정말 지울까요?
+                    </p>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleConfirmClear}
+                        className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-base transition-all active:scale-95 shadow-lg shadow-rose-600/30 cursor-pointer"
+                      >
+                        지우기
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmModal(false)}
+                        className="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-base transition-all border border-slate-600/60 cursor-pointer"
+                      >
+                        취소
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      };
+
+      // --- StageSelectorModal Component ---
+      const StageSelectorModal = ({ currentStage, completedStages, onSelectStage, onClose }) => {
+        const [activeTab, setActiveTab] = useState('stages');
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div className="bg-emerald-950 border border-emerald-700/80 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+              <div className="p-4 md:p-5 border-b border-emerald-800/80 flex items-center justify-between bg-emerald-900/50">
+                <div className="flex items-center gap-2">
+                  <Icon name="book-open" className="w-5 h-5 text-emerald-300" />
+                  <h3 className="text-lg md:text-xl font-black text-emerald-100">
+                    단계 선택 및 단어 도감
+                  </h3>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-1.5 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-300 transition-colors"
+                  aria-label="닫기"
+                >
+                  <Icon name="x" className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex border-b border-emerald-800/80 bg-emerald-950/70 px-4 pt-2 gap-2 text-sm">
+                <button
+                  onClick={() => setActiveTab('stages')}
+                  className={`pb-2.5 px-3 font-bold border-b-2 transition-all ${
+                    activeTab === 'stages' ? 'border-amber-400 text-amber-300' : 'border-transparent text-emerald-400 hover:text-emerald-200'
+                  }`}
+                >
+                  단계 선택 (1~7단계)
+                </button>
+                <button
+                  onClick={() => setActiveTab('encyclopedia')}
+                  className={`pb-2.5 px-3 font-bold border-b-2 transition-all ${
+                    activeTab === 'encyclopedia' ? 'border-amber-400 text-amber-300' : 'border-transparent text-emerald-400 hover:text-emerald-200'
+                  }`}
+                >
+                  나무 & 약초 단어 사전 ({POOL_100_NATURE_WORDS.length}개)
+                </button>
+              </div>
+
+              <div className="p-4 md:p-5 overflow-y-auto space-y-3 flex-1">
+                {activeTab === 'stages' ? (
+                  <div className="space-y-3">
+                    {STAGE_CONFIGS.map((stageItem) => {
+                      const isCurrent = stageItem.stage === currentStage;
+                      const isCompleted = completedStages.includes(stageItem.stage);
+
+                      return (
+                        <div
+                          key={stageItem.stage}
+                          className={`p-3.5 md:p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                            isCurrent
+                              ? 'bg-emerald-900/80 border-amber-400/80 ring-2 ring-amber-400/30'
+                              : isCompleted
+                              ? 'bg-emerald-900/40 border-emerald-700/60'
+                              : 'bg-emerald-950/60 border-emerald-800/50'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-amber-300 text-base">
+                                {stageItem.title}
+                              </span>
+                              {isCompleted && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-900/80 px-2 py-0.5 rounded-full border border-emerald-600/50">
+                                  <Icon name="check" className="w-3 h-3" /> 완료
+                                </span>
+                              )}
+                              {isCurrent && (
+                                <span className="inline-flex items-center text-[11px] font-bold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-600/50">
+                                  진행 중
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-emerald-300/80 mt-1">
+                              {stageItem.subtitle}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {stageItem.words.map((w) => (
+                                <span
+                                  key={w.id}
+                                  className={`text-xs px-2 py-0.5 rounded-lg font-medium flex items-center gap-1 ${
+                                    w.category === 'herb'
+                                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold'
+                                      : 'bg-emerald-950/70 text-emerald-200 border border-emerald-800'
+                                  }`}
+                                >
+                                  <span>{w.word}</span>
+                                  {w.category === 'herb' && (
+                                    <Icon name="sparkles" className="w-3 h-3 text-amber-400 fill-amber-400" />
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              onSelectStage(stageItem.stage);
+                              onClose();
+                            }}
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-emerald-950 font-black text-sm flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-transform cursor-pointer"
+                          >
+                            <Icon name="play" className="w-3.5 h-3.5 fill-emerald-950" />
+                            도전하기
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {POOL_100_NATURE_WORDS.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`p-3 rounded-xl border flex flex-col justify-between ${
+                          item.category === 'herb'
+                            ? 'bg-amber-950/30 border-amber-600/40'
+                            : 'bg-emerald-900/30 border-emerald-800/60'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-base font-black text-emerald-100 flex items-center gap-1.5">
+                            <span className="text-lg">{item.badge}</span>
+                            {item.word}
+                          </span>
+                          {item.category === 'herb' ? (
+                            <span className="text-[11px] font-bold text-amber-300 bg-amber-950 px-2 py-0.5 rounded-full border border-amber-500/50 flex items-center gap-1">
+                              <Icon name="sparkles" className="w-3 h-3 text-amber-400 fill-amber-400" /> 약초 (+10점)
+                            </span>
+                          ) : (
+                            <span className="text-[11px] font-semibold text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-700/60 flex items-center gap-1">
+                              <Icon name="trees" className="w-3 h-3 text-emerald-300" /> 나무
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-emerald-300/80 mt-1.5 leading-relaxed">
+                          {item.meaning}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 border-t border-emerald-800/80 bg-emerald-950/90 text-center text-xs text-emerald-400">
+                총 7단계 완성 시 <span className="text-amber-300 font-bold">"참잘했어요"</span> 인증 스탬프가 수여됩니다.
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // =========================================================================
+      // 7. MAIN APP COMPONENT
+      // =========================================================================
+      function App() {
+        const [currentStageNum, setCurrentStageNum] = useState(1);
+        const [currentWordIdx, setCurrentWordIdx] = useState(0);
+        const [completedStages, setCompletedStages] = useState([]);
+        const [isGameActive, setIsGameActive] = useState(true);
+
+        const [userInput, setUserInput] = useState('');
+        const [hadMistakeOnCurrentWord, setHadMistakeOnCurrentWord] = useState(false);
+
+        const [totalScore, setTotalScore] = useState(0);
+        const [perfectWordCount, setPerfectWordCount] = useState(0);
+        const [herbCount, setHerbCount] = useState(0);
+
+        const [currentCPM, setCurrentCPM] = useState(0);
+        const [averageCPM, setAverageCPM] = useState(0);
+        const [maxCPM, setMaxCPM] = useState(0);
+        const [accuracy, setAccuracy] = useState(100);
+
+        const totalCorrectStrokesRef = useRef(0);
+        const totalTypedStrokesRef = useRef(0);
+        const totalTypingSecondsRef = useRef(0);
+        const wordStartTimeRef = useRef(Date.now());
+        const gameStartTimestampRef = useRef(Date.now());
+        const isAdvancingRef = useRef(false);
+        const isCurrentInputWrongRef = useRef(false);
+
+        const [stageTimeLeft, setStageTimeLeft] = useState(60);
+        const [wordTimeLeft, setWordTimeLeft] = useState(10.0);
+
+        const [lastFeedback, setLastFeedback] = useState(null);
+
+        const [showStageClearModal, setShowStageClearModal] = useState(false);
+        const [showGrandVictoryModal, setShowGrandVictoryModal] = useState(false);
+        const [showStageSelector, setShowStageSelector] = useState(false);
+        const [showHallOfFameModal, setShowHallOfFameModal] = useState(false);
+        const [justSavedRecord, setJustSavedRecord] = useState(null);
+        const [isStageTimeout, setIsStageTimeout] = useState(false);
+
+        const [stageScoreDelta, setStageScoreDelta] = useState(0);
+        const [stageInitialScore, setStageInitialScore] = useState(0);
+        const [stagePerfectDelta, setStagePerfectDelta] = useState(0);
+        const stageInitialPerfectRef = useRef(0);
+
+        const [isMuted, setIsMuted] = useState(sounds.getMuted());
+        const [isLargeFont, setIsLargeFont] = useState(false);
+
+        const currentStageConfig = STAGE_CONFIGS.find((s) => s.stage === currentStageNum) || STAGE_CONFIGS[0];
+        const [stageWords, setStageWords] = useState(() => getRandomWords(20));
+        const currentWord = stageWords[currentWordIdx] || stageWords[0] || currentStageConfig.words[0];
+
+        const resetWordState = useCallback(() => {
+          setUserInput('');
+          setHadMistakeOnCurrentWord(false);
+          isCurrentInputWrongRef.current = false;
+          setWordTimeLeft(10.0);
+          wordStartTimeRef.current = Date.now();
+          setTimeout(() => {
+            isAdvancingRef.current = false;
+          }, 60);
+        }, []);
+
+        const advanceToNextWord = useCallback(() => {
+          if (currentWordIdx + 1 < stageWords.length) {
+            setCurrentWordIdx((prev) => prev + 1);
+            resetWordState();
+          } else {
+            setCompletedStages((prev) => (prev.includes(currentStageNum) ? prev : [...prev, currentStageNum]));
+            setIsGameActive(false);
+
+            if (currentStageNum === 7) {
+              bgm.stop();
+              setShowGrandVictoryModal(true);
+            } else {
+              bgm.pause();
+              const delta = totalScore - stageInitialScore;
+              setStageScoreDelta(delta > 0 ? delta : 0);
+              setStagePerfectDelta(perfectWordCount - stageInitialPerfectRef.current);
+              setShowStageClearModal(true);
+            }
+          }
+        }, [currentWordIdx, stageWords.length, currentStageNum, totalScore, stageInitialScore, perfectWordCount, resetWordState]);
+
+        const handleWordComplete = useCallback(() => {
+          isAdvancingRef.current = true;
+          setUserInput('');
+
+          const elapsedSecs = Math.max(0.3, (Date.now() - wordStartTimeRef.current) / 1000);
+          const wordStrokes = countKoreanStrokes(currentWord.word);
+
+          const wordCPM = calculateCPM(wordStrokes, elapsedSecs);
+          setCurrentCPM(wordCPM);
+          setMaxCPM((prev) => Math.max(prev, wordCPM));
+
+          totalCorrectStrokesRef.current += wordStrokes;
+          totalTypingSecondsRef.current += elapsedSecs;
+          const newAvgCPM = calculateCPM(totalCorrectStrokesRef.current, totalTypingSecondsRef.current);
+          setAverageCPM(newAvgCPM);
+
+          let points = 10;
+          let feedbackText = '정답!';
+          let feedbackType = 'normal';
+
+          const isHerb = currentWord.category === 'herb';
+          const isPerfect = !hadMistakeOnCurrentWord;
+
+          if (isHerb) {
+            points += 10;
+            setHerbCount((prev) => prev + 1);
+            feedbackType = 'herb';
+            feedbackText = '🌿 약초 보너스!';
+            sounds.playHerbBonus();
+          } else {
+            sounds.playWordCorrect();
+          }
+
+          if (isPerfect) {
+            points += 3;
+            setPerfectWordCount((prev) => prev + 1);
+            if (!isHerb) {
+              feedbackType = 'perfect';
+              feedbackText = '🎯 무오타 보너스!';
+              sounds.playPerfectBonus();
+            } else {
+              feedbackText = '🌿 약초 + 🎯 무오타 완성!';
+            }
+          }
+
+          setTotalScore((prev) => prev + points);
+          setStageTimeLeft((prev) => Math.min(60, prev + 2.5));
+
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 45,
+              spread: 75,
+              origin: { y: 0.65 },
+              colors: isHerb
+                ? ['#fbbf24', '#f59e0b', '#10b981', '#34d399', '#fef08a']
+                : ['#34d399', '#10b981', '#059669', '#38bdf8', '#fbbf24'],
+            });
+          }
+
+          setLastFeedback({ text: feedbackText, type: feedbackType, points });
+          setTimeout(() => setLastFeedback(null), 1500);
+
+          advanceToNextWord();
+        }, [currentWord, hadMistakeOnCurrentWord, advanceToNextWord]);
+
+        useEffect(() => {
+          bgm.play().catch(() => {});
+        }, []);
+
+        const handleInputChange = (val) => {
+          if (isAdvancingRef.current) return;
+
+          const target = currentWord.word;
+          totalTypedStrokesRef.current = Math.max(totalCorrectStrokesRef.current, totalTypedStrokesRef.current + 1);
+
+          const isMismatch = val.length > 0 && !target.startsWith(val);
+          if (isMismatch) {
+            setHadMistakeOnCurrentWord(true);
+            if (!isCurrentInputWrongRef.current) {
+              sounds.playDingDongWrong();
+              isCurrentInputWrongRef.current = true;
+            }
+          } else {
+            isCurrentInputWrongRef.current = false;
+            sounds.playKeypress();
+          }
+
+          const calcAccuracy = Math.min(
+            100,
+            Math.max(0, Math.round((totalCorrectStrokesRef.current / Math.max(1, totalTypedStrokesRef.current)) * 100))
+          );
+          setAccuracy(calcAccuracy);
+
+          if (val.trim() === target) {
+            isAdvancingRef.current = true;
+            setUserInput('');
+            handleWordComplete();
+            return;
+          }
+
+          setUserInput(val);
+        };
+
+        // 10s word timer & 60s stage timer
+        useEffect(() => {
+          if (!isGameActive || showStageClearModal || showGrandVictoryModal || showStageSelector || showHallOfFameModal || isStageTimeout) {
+            return;
+          }
+
+          const interval = setInterval(() => {
+            setWordTimeLeft((prev) => {
+              const next = Math.max(0, prev - 0.1);
+              if (next <= 0) {
+                sounds.playTimeout();
+                setLastFeedback({ text: '시간 초과! 다음 단어로 이동', type: 'timeout', points: 0 });
+                setTimeout(() => setLastFeedback(null), 1200);
+                advanceToNextWord();
+                return 10.0;
+              }
+              return Number(next.toFixed(1));
+            });
+
+            setStageTimeLeft((prev) => {
+              const next = prev - 0.1;
+              if (next <= 0) {
+                sounds.playTimeout();
+                bgm.pause();
+                setIsGameActive(false);
+                setIsStageTimeout(true);
+                return 0;
+              }
+              return Number(next.toFixed(1));
+            });
+          }, 100);
+
+          return () => clearInterval(interval);
+        }, [isGameActive, showStageClearModal, showGrandVictoryModal, showStageSelector, showHallOfFameModal, isStageTimeout, advanceToNextWord]);
+
+        const handleRestartStage = useCallback(() => {
+          setStageWords(getRandomWords(20));
+          setCurrentWordIdx(0);
+          setStageTimeLeft(60);
+          setIsStageTimeout(false);
+          setIsGameActive(true);
+          setShowStageClearModal(false);
+          resetWordState();
+          setStageInitialScore(totalScore);
+          stageInitialPerfectRef.current = perfectWordCount;
+          bgm.play().catch(() => {});
+        }, [totalScore, perfectWordCount, resetWordState]);
+
+        const handleShuffleWords = useCallback(() => {
+          setStageWords(getRandomWords(20));
+          setCurrentWordIdx(0);
+          setStageTimeLeft(60);
+          setIsStageTimeout(false);
+          setIsGameActive(true);
+          resetWordState();
+        }, [resetWordState]);
+
+        const handleNextStage = useCallback(() => {
+          if (currentStageNum < 7) {
+            const nextStage = currentStageNum + 1;
+            setCurrentStageNum(nextStage);
+            setStageWords(getRandomWords(20));
+            setCurrentWordIdx(0);
+            setStageTimeLeft(60);
+            setIsStageTimeout(false);
+            setIsGameActive(true);
+            setShowStageClearModal(false);
+            resetWordState();
+            setStageInitialScore(totalScore);
+            stageInitialPerfectRef.current = perfectWordCount;
+            bgm.play().catch(() => {});
+          } else {
+            bgm.stop();
+            setShowGrandVictoryModal(true);
+          }
+        }, [currentStageNum, totalScore, perfectWordCount, resetWordState]);
+
+        const handleSelectStage = useCallback((stageNum) => {
+          setCurrentStageNum(stageNum);
+          setStageWords(getRandomWords(20));
+          setCurrentWordIdx(0);
+          setStageTimeLeft(60);
+          setIsStageTimeout(false);
+          setIsGameActive(true);
+          setShowStageClearModal(false);
+          setShowGrandVictoryModal(false);
+          resetWordState();
+          bgm.play().catch(() => {});
+        }, [resetWordState]);
+
+        const handleRestartAll = useCallback(() => {
+          setCurrentStageNum(1);
+          setStageWords(getRandomWords(20));
+          setCurrentWordIdx(0);
+          setCompletedStages([]);
+          setTotalScore(0);
+          setPerfectWordCount(0);
+          setHerbCount(0);
+          setCurrentCPM(0);
+          setAverageCPM(0);
+          setMaxCPM(0);
+          setAccuracy(100);
+          totalCorrectStrokesRef.current = 0;
+          totalTypedStrokesRef.current = 0;
+          totalTypingSecondsRef.current = 0;
+          gameStartTimestampRef.current = Date.now();
+          setStageTimeLeft(60);
+          setIsStageTimeout(false);
+          setIsGameActive(true);
+          setShowStageClearModal(false);
+          setShowGrandVictoryModal(false);
+          resetWordState();
+          bgm.play().catch(() => {});
+        }, [resetWordState]);
+
+        const toggleMute = () => setIsMuted(sounds.toggleMute());
+        const toggleFontSize = () => setIsLargeFont((p) => !p);
+        const totalGameElapsed = Math.round((Date.now() - gameStartTimestampRef.current) / 1000);
+
+        return (
+          <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-950 text-slate-100 flex flex-col justify-between selection:bg-emerald-400 selection:text-emerald-950">
+            <Header
+              currentStage={currentStageNum}
+              totalStages={STAGE_CONFIGS.length}
+              isMuted={isMuted}
+              onToggleMute={toggleMute}
+              onRestartCurrent={handleRestartStage}
+              onOpenStageSelect={() => setShowStageSelector(true)}
+              onShuffleWords={handleShuffleWords}
+              isLargeFont={isLargeFont}
+              onToggleFontSize={toggleFontSize}
+              onOpenHallOfFame={() => setShowHallOfFameModal(true)}
+            />
+
+            <main className="max-w-4xl w-full mx-auto px-4 py-5 flex-1 flex flex-col gap-4 justify-center">
+              <StageProgress
+                currentStage={currentStageNum}
+                completedStages={completedStages}
+                currentWordIndex={currentWordIdx}
+                totalWordsInStage={stageWords.length}
+              />
+
+              <ScoreBoard
+                score={totalScore}
+                stageTimeLeft={Math.ceil(stageTimeLeft)}
+                wordTimeLeft={wordTimeLeft}
+                currentCPM={currentCPM}
+                averageCPM={averageCPM}
+                accuracy={accuracy}
+                perfectWordCount={perfectWordCount}
+                herbCount={herbCount}
+              />
+
+              {/* 시작 화면 🏆 명예의 전당 바로가기 바 */}
+              <div className="flex items-center justify-between gap-3 bg-emerald-950/70 border border-emerald-800/80 rounded-2xl px-3.5 py-2 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setShowHallOfFameModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/25 to-yellow-500/15 hover:from-amber-500/35 hover:to-yellow-500/25 text-amber-300 border border-amber-400/60 font-black text-xs sm:text-sm transition-all active:scale-95 shadow-sm cursor-pointer"
+                >
+                  <span className="text-base">🏆</span>
+                  <span>명예의 전당 (순위표)</span>
+                </button>
+                <span className="text-xs text-emerald-300/80 hidden sm:inline">
+                  7단계를 완주하고 내 이름을 명예의 전당에 올려보세요!
+                </span>
+              </div>
+
+              {isStageTimeout ? (
+                <div className="w-full bg-rose-950/80 border-2 border-rose-500/70 rounded-3xl p-8 text-center shadow-2xl flex flex-col items-center justify-center">
+                  <Icon name="alert-triangle" className="w-16 h-16 text-rose-400 mb-3 animate-bounce" />
+                  <h2 className="text-2xl font-black text-rose-100 mb-2">
+                    60초 제한시간이 종료되었습니다!
+                  </h2>
+                  <p className="text-rose-200/90 text-sm max-w-md mb-6">
+                    한판 60초 안에 20개 단어를 모두 입력해야 합니다. 다시 한 번 도전해 보세요!
+                  </p>
+                  <button
+                    onClick={handleRestartStage}
+                    className="py-3 px-6 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-amber-950 font-black text-base transition-all transform active:scale-95 shadow-lg shadow-amber-500/30 flex items-center gap-2 cursor-pointer"
+                  >
+                    <Icon name="rotate-ccw" className="w-5 h-5 stroke-[2.5]" />
+                    {currentStageNum}단계 다시 시작하기
+                  </button>
+                </div>
+              ) : (
+                <TypingArea
+                  currentWord={currentWord}
+                  userInput={userInput}
+                  onInputChange={handleInputChange}
+                  onSubmitWord={() => {
+                    if (userInput.trim() === currentWord.word) {
+                      handleWordComplete();
+                    }
+                  }}
+                  isLargeFont={isLargeFont}
+                  hadMistakeOnCurrentWord={hadMistakeOnCurrentWord}
+                  lastFeedback={lastFeedback}
+                />
+              )}
+            </main>
+
+            <footer className="w-full border-t border-emerald-900/60 bg-emerald-950/80 py-3 px-4 text-center text-xs text-emerald-400/80">
+              <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2">
+                <span>🌿 7단계 완성 시 <b>"참잘했어요"</b> 칭찬 스탬프 수여</span>
+                <span className="flex items-center gap-1.5 text-amber-300 font-semibold">
+                  <Icon name="music" className="w-3.5 h-3.5 text-amber-400" />
+                  배경음악: cybernetic-overload (무한 반복 재생)
+                </span>
+                <span>⚡ 단어당 10초 · 라운드당 60초 · 약초 +10점 가산점</span>
+              </div>
+            </footer>
+
+            {showStageClearModal && (
+              <StageClearModal
+                completedStage={currentStageNum}
+                stageScore={stageScoreDelta}
+                stageCPM={averageCPM}
+                stageAccuracy={accuracy}
+                stagePerfectCount={stagePerfectDelta}
+                onNextStage={handleNextStage}
+                onRetryStage={handleRestartStage}
+              />
+            )}
+
+            {showGrandVictoryModal && (
+              <GrandVictoryModal
+                totalScore={totalScore}
+                averageCPM={averageCPM}
+                maxCPM={maxCPM}
+                overallAccuracy={accuracy}
+                totalPerfectWords={perfectWordCount}
+                totalHerbsTyped={herbCount}
+                elapsedSeconds={totalGameElapsed}
+                onRestartAll={handleRestartAll}
+                onOpenStageSelect={() => {
+                  setShowGrandVictoryModal(false);
+                  setShowStageSelector(true);
+                }}
+                onOpenHallOfFame={(savedRecord) => {
+                  if (savedRecord) setJustSavedRecord(savedRecord);
+                  setShowGrandVictoryModal(false);
+                  setShowHallOfFameModal(true);
+                }}
+              />
+            )}
+
+            {showStageSelector && (
+              <StageSelectorModal
+                currentStage={currentStageNum}
+                completedStages={completedStages}
+                onSelectStage={handleSelectStage}
+                onClose={() => setShowStageSelector(false)}
+              />
+            )}
+
+            {showHallOfFameModal && (
+              <HallOfFameModal
+                entries={getProcessedRankings(justSavedRecord)}
+                onClose={() => setShowHallOfFameModal(false)}
+                onRestartAll={handleRestartAll}
+                onCleared={() => setJustSavedRecord(null)}
+              />
+            )}
+          </div>
+        );
+      }
+
+      // Render App
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
